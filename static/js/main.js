@@ -148,7 +148,63 @@ function createStairModel(dimensions) {
         }
     }
 
-    // Центрируем модель и настраиваем камеру
+    // Функция для расчета количества усилений в зависимости от ширины
+    function calculateReinforcementsCount(width) {
+        if (width <= 1000) return 1;
+        return Math.ceil((width - 1000) / 300) + 1;
+    }
+
+    // Добавляем усиления
+    const reinforcementsCount = calculateReinforcementsCount(width);
+    const spacing = (width - 2 * profile_thickness) / (reinforcementsCount + 1);
+    
+    // Усиления для каждой ступени
+    for (let i = 0; i < steps; i++) {
+        const startY = i * step_height;
+        
+        for (let j = 0; j < reinforcementsCount; j++) {
+            const xPos = -width/2 + profile_thickness + spacing * (j + 1);
+            
+            if (i === 0) {
+                // Для первой ступени - вертикальное усиление до основания
+                const frontStandGeometry = new THREE.BoxGeometry(profile_thickness, step_height, profile_thickness);
+                const frontStand = new THREE.Mesh(frontStandGeometry, frameMaterial);
+                frontStand.position.set(xPos, step_height/2, 0);
+                stairModel.add(frontStand);
+            } else {
+                // Для остальных ступеней - вертикальное усиление между ступенями
+                // Усиление соединяет низ переда вышестоящей ступени 
+                // с задней стороной заднего профиля нижестоящей ступени
+                const standGeometry = new THREE.BoxGeometry(profile_thickness, step_height, profile_thickness);
+                const stand = new THREE.Mesh(standGeometry, frameMaterial);
+                stand.position.set(
+                    xPos, 
+                    startY + step_height/2, 
+                    // Позиционируем у задней части нижестоящей ступени
+                    // и сдвигаем на ширину профиля назад
+                    (i-1) * step_depth + step_depth
+                );
+                stairModel.add(stand);
+            }
+        }
+
+        // Для последней ступени - дополнительное вертикальное усиление от задней части до основания
+        if (i === steps - 1) {
+            const lastStepZ = i * step_depth;
+            
+            for (let j = 0; j < reinforcementsCount; j++) {
+                const xPos = -width/2 + profile_thickness + spacing * (j + 1);
+                const height = (i + 1) * step_height;
+                
+                const backStandGeometry = new THREE.BoxGeometry(profile_thickness, height, profile_thickness);
+                const backStand = new THREE.Mesh(backStandGeometry, frameMaterial);
+                backStand.position.set(xPos, height/2, lastStepZ + step_depth - profile_thickness);
+                stairModel.add(backStand);
+            }
+        }
+    }
+
+    // Центрируем модель
     stairModel.position.set(0, 0, -step_depth * (steps-1) / 2);
     scene.add(stairModel);
 
