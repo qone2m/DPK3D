@@ -1,0 +1,5 @@
+ttkthemes>=3.2.2
+vtk>=9.2.0
+PyQt5>=5.15.0
+flask>=2.0.1
+flask-cors>=3.0.10
