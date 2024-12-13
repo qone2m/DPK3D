@@ -206,6 +206,64 @@ function createDPKBoards(width, depth) {
     return boardGroup;
 }
 
+function createDPKPlatform(width, depth) {
+    const boardGroup = new THREE.Group();
+    const boardWidth = 150;
+    const boardHeight = 25;
+    const gap = 5;
+
+    // Вычисляем количество полных досок и остаток
+    const availableSpace = depth - profile_thickness; // Учитываем задний профиль
+    const numFullBoards = Math.floor((availableSpace + gap) / (boardWidth + gap));
+    let remainingSpace = availableSpace - (numFullBoards * (boardWidth + gap) - gap);
+    
+    // Размещаем полные доски
+    for (let i = 0; i < numFullBoards; i++) {
+        const boardGeometry = new THREE.BoxGeometry(width, boardHeight, boardWidth);
+        const board = new THREE.Mesh(boardGeometry, dpkMaterial);
+        const zPosition = -10 + i * (boardWidth + gap) + boardWidth/2;
+        board.position.set(0, boardHeight/2, zPosition);
+        boardGroup.add(board);
+
+        // Добавляем болты для каждой доски
+        const boltPositions = [
+            {x: -width/2 + 30, z: zPosition},
+            {x: width/2 - 30, z: zPosition},
+        ];
+
+        boltPositions.forEach(pos => {
+            const bolt = createBolt();
+            bolt.position.set(pos.x, 0, pos.z);
+            boltsGroup.add(bolt);
+        });
+    }
+
+    // Если есть остаток места больше минимального (например, 50мм), добавляем последнюю обрезанную доску
+    if (remainingSpace > 50) {
+        // Обрезаем доску по заднему профилю
+        const lastBoardWidth = Math.min(boardWidth, remainingSpace);
+        const lastBoardGeometry = new THREE.BoxGeometry(width, boardHeight, lastBoardWidth);
+        const lastBoard = new THREE.Mesh(lastBoardGeometry, dpkMaterial);
+        const zPosition = -10 + numFullBoards * (boardWidth + gap) + lastBoardWidth/2;
+        lastBoard.position.set(0, boardHeight/2, zPosition);
+        boardGroup.add(lastBoard);
+
+        // Болты для последней доски
+        const boltPositions = [
+            {x: -width/2 + 30, z: zPosition},
+            {x: width/2 - 30, z: zPosition},
+        ];
+
+        boltPositions.forEach(pos => {
+            const bolt = createBolt();
+            bolt.position.set(pos.x, 0, pos.z);
+            boltsGroup.add(bolt);
+        });
+    }
+
+    return boardGroup;
+}
+
 function createPVLCover(width, depth) {
     const pvlGroup = new THREE.Group();
     const gridSize = 20; // Размер ячейки сетки
@@ -239,6 +297,27 @@ function createPVLCover(width, depth) {
     }
 
     return pvlGroup;
+}
+
+function needsHorizontalReinforcement(stepIndex, material) {
+    if (material === "ПВЛ") {
+        return false;
+    }
+    if (material === "ДПК+1 ПВЛ" && stepIndex === 0) {
+        return false;
+    }
+    if (material === "ДПК") {
+        return true;
+    }
+    if (material === "ДПК+1 ПВЛ" && stepIndex > 0) {
+        return true;
+    }
+    return false;
+}
+
+function needsDepthReinforcement(depth, material) {
+    // Для ПВЛ нужно усиление если глубина больше 305мм
+    return material === "ПВЛ" && depth > 305;
 }
 
 function updateVisibility() {
@@ -392,7 +471,7 @@ function createStairModel(dimensions) {
     for (let i = 0; i < steps; i++) {
         const startY = i * step_height;
         const isLastStep = i === steps - 1;
-        const currentStepDepth = isLastStep ? (has_platform ? platform_depth : 0) : step_depth;
+        const currentStepDepth = isLastStep && has_platform ? platform_depth : step_depth;
         const currentStepZ = i * step_depth; // Позиция начала текущей ступени всегда основана на step_depth
         
         for (let j = 0; j < reinforcementsCount; j++) {
@@ -415,7 +494,7 @@ function createStairModel(dimensions) {
             }
 
             // Добавляем горизонтальные усиления для ступеней
-            if (needsHorizontalReinforcement(i)) {
+            if (needsHorizontalReinforcement(i, material)) {
                 const horizontalReinforcementGeometry = new THREE.BoxGeometry(profile_thickness, profile_thickness, currentStepDepth - profile_thickness);
                 const horizontalReinforcement = new THREE.Mesh(horizontalReinforcementGeometry, frameMaterial);
                 horizontalReinforcement.position.set(
@@ -444,7 +523,15 @@ function createStairModel(dimensions) {
         }
     }
 
-    // Добавляем покрытие в зависимости от материала
+    // Добавляем усиление глубины для ПВЛ если нужно
+    function createDepthReinforcement(width, height, depth, x, y, z) {
+        // Создаем усиление поперек ступени
+        const reinforcementGeometry = new THREE.BoxGeometry(profile_thickness, height, depth);
+        const reinforcement = new THREE.Mesh(reinforcementGeometry, frameMaterial);
+        reinforcement.position.set(x, y, z);
+        return reinforcement;
+    }
+
     for (let i = 0; i < steps; i++) {
         const isLastStep = i === steps - 1;
         const currentStepDepth = isLastStep && has_platform ? platform_depth : step_depth;
@@ -454,20 +541,39 @@ function createStairModel(dimensions) {
             z: i * step_depth
         };
 
-        if (material === "ДПК" || (material === "ДПК+1 ПВЛ" && i > 0)) {
-            const dpkBoards = createDPKBoards(width, currentStepDepth);
-            dpkBoards.position.set(stepPosition.x, stepPosition.y, stepPosition.z);
-            coveringsGroup.add(dpkBoards);
+        // Добавляем усиление глубины для ПВЛ если нужно
+        if (isLastStep && needsDepthReinforcement(currentStepDepth, material)) {
+            console.log(`Добавляем усиление для площадки глубиной ${currentStepDepth}мм`);
+            
+            // Получаем количество стоек усиления из основных параметров
+            const spacing = (width - 2 * profile_thickness) / (reinforcements_count + 1);
+            
+            // Добавляем усиления с тем же расстоянием, что и вертикальные стойки
+            for (let j = 0; j < reinforcements_count; j++) {
+                const xPos = -width/2 + profile_thickness + spacing * (j + 1);
+                const reinforcement = createDepthReinforcement(
+                    profile_thickness,
+                    profile_thickness,
+                    currentStepDepth - 2 * profile_thickness,
+                    xPos,
+                    stepPosition.y,
+                    stepPosition.z + currentStepDepth/2
+                );
+                stairModel.add(reinforcement);
+            }
+        }
 
-            // Добавляем дополнительные болты к усилениям если нужно
-            if (document.getElementById('additional-bolts').checked && needsHorizontalReinforcement(i)) {
-                const spacing = (width - 2 * profile_thickness) / (reinforcements_count + 1);
-                for (let j = 0; j < reinforcements_count; j++) {
-                    const xPos = -width/2 + profile_thickness + spacing * (j + 1);
-                    const bolt = createBolt();
-                    bolt.position.set(xPos, (i + 1) * step_height + 0.5, i * step_depth + currentStepDepth/2);
-                    boltsGroup.add(bolt);
-                }
+        if (material === "ДПК" || (material === "ДПК+1 ПВЛ" && i > 0)) {
+            if (isLastStep && has_platform) {
+                // Для площадки используем специальную функцию
+                const platformBoards = createDPKPlatform(width, currentStepDepth);
+                platformBoards.position.set(stepPosition.x, stepPosition.y, stepPosition.z);
+                coveringsGroup.add(platformBoards);
+            } else {
+                // Для обычных ступеней используем стандартную функцию
+                const dpkBoards = createDPKBoards(width, currentStepDepth);
+                dpkBoards.position.set(stepPosition.x, stepPosition.y, stepPosition.z);
+                coveringsGroup.add(dpkBoards);
             }
         } else if (material === "ПВЛ" || (material === "ДПК+1 ПВЛ" && i === 0)) {
             const pvlCover = createPVLCover(width, currentStepDepth);
