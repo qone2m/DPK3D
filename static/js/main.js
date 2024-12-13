@@ -229,7 +229,7 @@ document.getElementById('calculator-form').addEventListener('submit', async func
     };
 
     try {
-        const response = await fetch('/api/calculate', {
+        const response = await fetch('http://192.168.0.149:5000/api/calculate', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
