@@ -11,16 +11,13 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
     pvl_depth = 300  # глубина ступеней ПВЛ, мм
     dpk_reduction = 25  # уменьшение высоты ступени для ДПК, мм
 
-    # Определение полезной глубины ступеней
-    if material == "ДПК":
-        step_depth = dpk_depth - 2 * profile_thickness
-        height_reduction = dpk_reduction
-    elif material == "ПВЛ":
-        step_depth = pvl_depth - 2 * profile_thickness
-        height_reduction = 0
+    # Определяем глубину ступени в зависимости от материала
+    if material == "ПВЛ":
+        step_depth = pvl_depth
+    elif material == "ДПК":
+        step_depth = dpk_depth
     elif material == "ДПК+1 ПВЛ":
-        step_depth = dpk_depth - 2 * profile_thickness
-        height_reduction = dpk_reduction
+        step_depth = dpk_depth  # Все ступени будут глубиной 305, кроме первой
     else:
         return None
 

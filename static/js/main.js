@@ -1,5 +1,9 @@
+// Глобальные переменные
 let scene, camera, renderer, controls;
 let stairModel = new THREE.Group();
+let coveringsGroup = new THREE.Group();
+let boltsGroup = new THREE.Group();
+const profile_thickness = 20; // Выносим в глобальную область
 
 // Инициализация Three.js
 function init() {
@@ -125,10 +129,132 @@ function animate() {
     renderer.render(scene, camera);
 }
 
+// Материалы
+const dpkMaterial = new THREE.MeshPhongMaterial({
+    color: 0x8B4513,
+    flatShading: true,
+    shininess: 30
+});
+
+const pvlMaterial = new THREE.MeshPhongMaterial({
+    color: 0xA0A0A0,
+    wireframe: true,
+    wireframeLinewidth: 1,
+    transparent: true,
+    opacity: 0.8,
+    side: THREE.DoubleSide
+});
+
+const boltMaterial = new THREE.MeshPhongMaterial({
+    color: 0x404040,
+    shininess: 60
+});
+
+function createBolt() {
+    const boltGroup = new THREE.Group();
+    
+    // Шляпка болта
+    const headGeometry = new THREE.CylinderGeometry(5, 5, 3, 6);
+    const head = new THREE.Mesh(headGeometry, boltMaterial);
+    head.rotation.x = Math.PI; // Поворачиваем шляпку вниз
+    boltGroup.add(head);
+    
+    // Тело болта
+    const bodyGeometry = new THREE.CylinderGeometry(2, 2, 30, 6);
+    const body = new THREE.Mesh(bodyGeometry, boltMaterial);
+    body.position.y = -15;
+    boltGroup.add(body);
+    
+    return boltGroup;
+}
+
+function createDPKBoards(width, depth) {
+    const boardGroup = new THREE.Group();
+    const boardDepth = (depth - 5) / 2; // Делим глубину ступени на 2 доски с зазором 5мм
+    const boardHeight = 25;
+    const gap = 5;
+
+    // Передняя доска
+    const frontBoardGeometry = new THREE.BoxGeometry(width, boardHeight, boardDepth);
+    const frontBoard = new THREE.Mesh(frontBoardGeometry, dpkMaterial);
+    // Сдвигаем на 10мм вперед
+    frontBoard.position.set(0, boardHeight/2, -10 + boardDepth/2);
+    boardGroup.add(frontBoard);
+
+    // Задняя доска
+    const backBoardGeometry = new THREE.BoxGeometry(width, boardHeight, boardDepth);
+    const backBoard = new THREE.Mesh(backBoardGeometry, dpkMaterial);
+    // Сдвигаем на 10мм вперед
+    backBoard.position.set(0, boardHeight/2, -10 + depth - boardDepth/2);
+    boardGroup.add(backBoard);
+
+    // Добавляем болты к каркасу ступени
+    const boltPositions = [
+        {x: -width/2 + 30, z: boardDepth/2}, // Передний левый
+        {x: width/2 - 30, z: boardDepth/2},  // Передний правый
+        {x: -width/2 + 30, z: depth - boardDepth/2}, // Задний левый
+        {x: width/2 - 30, z: depth - boardDepth/2}   // Задний правый
+    ];
+
+    boltPositions.forEach(pos => {
+        const bolt = createBolt();
+        // Сдвигаем болты на 10мм вперед вместе с досками
+        bolt.position.set(pos.x, 0, -10 + pos.z);
+        boltsGroup.add(bolt);
+    });
+
+    return boardGroup;
+}
+
+function createPVLCover(width, depth) {
+    const pvlGroup = new THREE.Group();
+    const gridSize = 20; // Размер ячейки сетки
+    
+    // Основная пластина внутри каркаса, от заднего края переднего профиля до переднего края заднего профиля
+    const pvlDepth = depth - 2 * profile_thickness;
+    const plateGeometry = new THREE.BoxGeometry(width - 2 * profile_thickness, 2, pvlDepth);
+    const plate = new THREE.Mesh(plateGeometry, pvlMaterial);
+    // Позиционируем от заднего края переднего профиля
+    plate.position.set(0, 1, profile_thickness + pvlDepth/2);
+    pvlGroup.add(plate);
+    
+    // Создаем вертикальные линии сетки
+    const verticalLines = Math.floor((width - 2 * profile_thickness) / gridSize);
+    for (let i = 0; i <= verticalLines; i++) {
+        const lineGeometry = new THREE.BoxGeometry(1, 3, pvlDepth);
+        const line = new THREE.Mesh(lineGeometry, pvlMaterial);
+        const xPos = -width/2 + profile_thickness + (i * gridSize);
+        line.position.set(xPos, 1, profile_thickness + pvlDepth/2);
+        pvlGroup.add(line);
+    }
+    
+    // Создаем горизонтальные линии сетки
+    const horizontalLines = Math.floor(pvlDepth / gridSize);
+    for (let i = 0; i <= horizontalLines; i++) {
+        const lineGeometry = new THREE.BoxGeometry(width - 2 * profile_thickness, 3, 1);
+        const line = new THREE.Mesh(lineGeometry, pvlMaterial);
+        const zPos = profile_thickness + (i * gridSize);
+        line.position.set(0, 1, zPos);
+        pvlGroup.add(line);
+    }
+
+    return pvlGroup;
+}
+
+function updateVisibility() {
+    const showCovering = document.getElementById('show-covering').checked;
+    const showBolts = document.getElementById('show-bolts').checked;
+    
+    coveringsGroup.visible = showCovering;
+    boltsGroup.visible = showBolts;
+}
+
 function createStairModel(dimensions) {
-    // Удаляем старую модель
+    // Очищаем группы перед созданием новой модели
     scene.remove(stairModel);
     stairModel = new THREE.Group();
+    coveringsGroup = new THREE.Group();
+    boltsGroup = new THREE.Group();
 
     const {width, height, step_height, step_depth, profile_thickness, has_platform, platform_depth, reinforcements_count, material} = dimensions;
     console.log('Material in createStairModel:', material); // Отладочный вывод
@@ -318,6 +444,41 @@ function createStairModel(dimensions) {
         }
     }
 
+    // Добавляем покрытие в зависимости от материала
+    for (let i = 0; i < steps; i++) {
+        const isLastStep = i === steps - 1;
+        const currentStepDepth = isLastStep && has_platform ? platform_depth : step_depth;
+        const stepPosition = {
+            x: 0,
+            y: (i + 1) * step_height,
+            z: i * step_depth
+        };
+
+        if (material === "ДПК" || (material === "ДПК+1 ПВЛ" && i > 0)) {
+            const dpkBoards = createDPKBoards(width, currentStepDepth);
+            dpkBoards.position.set(stepPosition.x, stepPosition.y, stepPosition.z);
+            coveringsGroup.add(dpkBoards);
+
+            // Добавляем дополнительные болты к усилениям если нужно
+            if (document.getElementById('additional-bolts').checked && needsHorizontalReinforcement(i)) {
+                const spacing = (width - 2 * profile_thickness) / (reinforcements_count + 1);
+                for (let j = 0; j < reinforcements_count; j++) {
+                    const xPos = -width/2 + profile_thickness + spacing * (j + 1);
+                    const bolt = createBolt();
+                    bolt.position.set(xPos, (i + 1) * step_height + 0.5, i * step_depth + currentStepDepth/2);
+                    boltsGroup.add(bolt);
+                }
+            }
+        } else if (material === "ПВЛ" || (material === "ДПК+1 ПВЛ" && i === 0)) {
+            const pvlCover = createPVLCover(width, currentStepDepth);
+            pvlCover.position.set(stepPosition.x, stepPosition.y, stepPosition.z);
+            coveringsGroup.add(pvlCover);
+        }
+    }
+
+    stairModel.add(coveringsGroup);
+    stairModel.add(boltsGroup);
+
     // Центрируем модель
     stairModel.position.set(0, 0, -step_depth * (steps-1) / 2);
     scene.add(stairModel);
@@ -397,6 +558,12 @@ document.getElementById('custom-reinforcements').addEventListener('change', func
     } else {
         container.classList.add('hidden');
     }
+});
+
+document.getElementById('show-covering').addEventListener('change', updateVisibility);
+document.getElementById('show-bolts').addEventListener('change', updateVisibility);
+document.getElementById('additional-bolts').addEventListener('change', function() {
+    recalculateStairs();
 });
 
 // Инициализация при загрузке страницы
