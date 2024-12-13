@@ -4,7 +4,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-def calculate_metal(width, height, steps, material, has_platform, platform_depth=0):
+def calculate_metal(width, height, steps, material, has_platform, platform_depth=0, reinforcements_count=1):
     # Константы
     profile_thickness = 20  # толщина профиля, мм
     dpk_depth = 305  # глубина ступеней ДПК, мм
@@ -31,7 +31,7 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
         base_length += 2 * width + 2 * platform_depth
     steps_length = steps * (2 * width + 2 * step_depth)
     vertical_stands = (2 * steps + 2) * step_height
-    reinforcements = ((width // 500) + 1) * steps * step_height
+    reinforcements = reinforcements_count * steps * step_height
     total_length = base_length + steps_length + vertical_stands + reinforcements
 
     return {
@@ -47,7 +47,8 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
             "step_depth": step_depth,
             "profile_thickness": profile_thickness,
             "has_platform": has_platform,
-            "platform_depth": platform_depth
+            "platform_depth": platform_depth,
+            "reinforcements_count": reinforcements_count
         }
     }
 
@@ -65,8 +66,9 @@ def calculate():
         material = data['material']
         has_platform = data['has_platform']
         platform_depth = float(data['platform_depth']) if has_platform else 0
+        reinforcements_count = int(data.get('reinforcements_count', 1))
 
-        result = calculate_metal(width, height, steps, material, has_platform, platform_depth)
+        result = calculate_metal(width, height, steps, material, has_platform, platform_depth, reinforcements_count)
         if result is None:
             return jsonify({"error": "Неверный материал"}), 400
 

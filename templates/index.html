@@ -55,6 +55,18 @@
                     </div>
                     <div class="mb-3">
                         <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="custom-reinforcements">
+                            <label class="form-check-label" for="custom-reinforcements">
+                                Индивидуальное количество стоек усиления
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3 hidden" id="reinforcements-count-container">
+                        <label for="reinforcements-count" class="form-label">Количество стоек усиления</label>
+                        <input type="number" class="form-control" id="reinforcements-count" min="1" value="1">
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="has-platform">
                             <label class="form-check-label" for="has-platform">
                                 Есть площадка

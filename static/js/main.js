@@ -57,7 +57,7 @@ function createStairModel(dimensions) {
     scene.remove(stairModel);
     stairModel = new THREE.Group();
 
-    const {width, height, step_height, step_depth, profile_thickness, has_platform, platform_depth} = dimensions;
+    const {width, height, step_height, step_depth, profile_thickness, has_platform, platform_depth, reinforcements_count} = dimensions;
     const steps = Math.round(height / step_height);
 
     // Определяем глубину последней ступени/площадки
@@ -164,7 +164,7 @@ function createStairModel(dimensions) {
     }
 
     // Добавляем усиления
-    const reinforcementsCount = calculateReinforcementsCount(width);
+    const reinforcementsCount = reinforcements_count || calculateReinforcementsCount(width);
     const spacing = (width - 2 * profile_thickness) / (reinforcementsCount + 1);
     
     // Усиления для каждой ступени
@@ -232,7 +232,8 @@ document.getElementById('calculator-form').addEventListener('submit', async func
         material: document.getElementById('material').value,
         has_platform: document.getElementById('has-platform').checked,
         platform_depth: document.getElementById('has-platform').checked ? 
-            parseFloat(document.getElementById('platform-depth').value) : 0
+            parseFloat(document.getElementById('platform-depth').value) : 0,
+        reinforcements_count: parseInt(document.getElementById('reinforcements-count').value) || 1
     };
 
     try {
@@ -277,6 +278,15 @@ document.getElementById('has-platform').addEventListener('change', function(e) {
         platformDepthContainer.classList.remove('hidden');
     } else {
         platformDepthContainer.classList.add('hidden');
+    }
+});
+
+document.getElementById('custom-reinforcements').addEventListener('change', function(e) {
+    const container = document.getElementById('reinforcements-count-container');
+    if (e.target.checked) {
+        container.classList.remove('hidden');
+    } else {
+        container.classList.add('hidden');
     }
 });
 
