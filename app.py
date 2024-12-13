@@ -31,14 +31,26 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
         base_length += 2 * width + 2 * platform_depth
     steps_length = steps * (2 * width + 2 * step_depth)
     vertical_stands = (2 * steps + 2) * step_height
-    reinforcements = reinforcements_count * steps * step_height
-    total_length = base_length + steps_length + vertical_stands + reinforcements
+    vertical_reinforcements = reinforcements_count * steps * step_height
+    
+    # Горизонтальные усиления
+    horizontal_reinforcements = 0
+    for i in range(steps):
+        # Пропускаем усиления для ПВЛ и первой ступени в ДПК+1 ПВЛ
+        if material == "ПВЛ" or (material == "ДПК+1 ПВЛ" and i == 0):
+            continue
+            
+        # Используем platform_depth для последней ступени если есть площадка
+        current_depth = platform_depth if (i == steps - 1 and has_platform) else step_depth
+        horizontal_reinforcements += reinforcements_count * (current_depth - profile_thickness)
+    
+    total_length = base_length + steps_length + vertical_stands + vertical_reinforcements + horizontal_reinforcements
 
     return {
         "base_length": round(base_length),
         "steps_length": round(steps_length),
         "vertical_stands": round(vertical_stands),
-        "reinforcements": round(reinforcements),
+        "reinforcements": round(vertical_reinforcements + horizontal_reinforcements),
         "total_length": round(total_length),
         "dimensions": {
             "width": width,
@@ -48,7 +60,8 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
             "profile_thickness": profile_thickness,
             "has_platform": has_platform,
             "platform_depth": platform_depth,
-            "reinforcements_count": reinforcements_count
+            "reinforcements_count": reinforcements_count,
+            "material": material
         }
     }
 

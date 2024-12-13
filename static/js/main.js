@@ -130,12 +130,33 @@ function createStairModel(dimensions) {
     scene.remove(stairModel);
     stairModel = new THREE.Group();
 
-    const {width, height, step_height, step_depth, profile_thickness, has_platform, platform_depth, reinforcements_count} = dimensions;
+    const {width, height, step_height, step_depth, profile_thickness, has_platform, platform_depth, reinforcements_count, material} = dimensions;
+    console.log('Material in createStairModel:', material); // Отладочный вывод
     const steps = Math.round(height / step_height);
 
-    // Определяем глубину последней ступени/площадки
-    const lastStepDepth = (has_platform && platform_depth > 0) ? platform_depth : step_depth;
-    
+    // Определяем необходимость горизонтальных усилений для каждой ступени
+    function needsHorizontalReinforcement(stepIndex) {
+        console.log('Checking step', stepIndex, 'material:', material); // Отладочный вывод
+        if (material === "ПВЛ") {
+            console.log('ПВЛ - no reinforcement needed');
+            return false;
+        }
+        if (material === "ДПК+1 ПВЛ" && stepIndex === 0) {
+            console.log('ДПК+1 ПВЛ, first step - no reinforcement needed');
+            return false;
+        }
+        if (material === "ДПК") {
+            console.log('ДПК - reinforcement needed');
+            return true;
+        }
+        if (material === "ДПК+1 ПВЛ" && stepIndex > 0) {
+            console.log('ДПК+1 ПВЛ, not first step - reinforcement needed');
+            return true;
+        }
+        console.log('Default case - no reinforcement needed');
+        return false;
+    }
+
     // Материал для профиля 20х20
     const frameMaterial = new THREE.MeshPhongMaterial({
         color: 0x404040,
@@ -146,7 +167,8 @@ function createStairModel(dimensions) {
     // 1. Горизонтальное основание на земле
     // Продольные балки основания - от переднего края до заднего
     // Корректируем общую глубину с учетом возможной площадки
-    const totalDepth = step_depth * (steps - 2) + step_depth + lastStepDepth - profile_thickness;
+    const lastStepDepth = (has_platform && platform_depth > 0) ? platform_depth : step_depth;
+    const totalDepth = step_depth * (steps - 1) + lastStepDepth;
     const baseLongBeamGeometry = new THREE.BoxGeometry(profile_thickness, profile_thickness, totalDepth);
     
     // Левая продольная балка основания
@@ -238,13 +260,13 @@ function createStairModel(dimensions) {
 
     // Добавляем усиления
     const reinforcementsCount = reinforcements_count || calculateReinforcementsCount(width);
-    const spacing = (width - 2 * profile_thickness) / (reinforcementsCount + 1);
+    const spacing = (width - 2 * profile_thickness) / (reinforcements_count + 1);
     
     // Усиления для каждой ступени
     for (let i = 0; i < steps; i++) {
         const startY = i * step_height;
         const isLastStep = i === steps - 1;
-        const currentStepDepth = isLastStep ? lastStepDepth : step_depth;
+        const currentStepDepth = isLastStep ? (has_platform ? platform_depth : 0) : step_depth;
         const currentStepZ = i * step_depth; // Позиция начала текущей ступени всегда основана на step_depth
         
         for (let j = 0; j < reinforcementsCount; j++) {
@@ -264,6 +286,18 @@ function createStairModel(dimensions) {
                 const previousStepZ = (i - 1) * step_depth;
                 stand.position.set(xPos, startY + step_height/2, previousStepZ + step_depth);
                 stairModel.add(stand);
+            }
+
+            // Добавляем горизонтальные усиления для ступеней
+            if (needsHorizontalReinforcement(i)) {
+                const horizontalReinforcementGeometry = new THREE.BoxGeometry(profile_thickness, profile_thickness, currentStepDepth - profile_thickness);
+                const horizontalReinforcement = new THREE.Mesh(horizontalReinforcementGeometry, frameMaterial);
+                horizontalReinforcement.position.set(
+                    xPos,
+                    (i + 1) * step_height,
+                    currentStepZ + (currentStepDepth - profile_thickness)/2
+                );
+                stairModel.add(horizontalReinforcement);
             }
         }
     }
@@ -310,6 +344,7 @@ document.getElementById('calculator-form').addEventListener('submit', async func
     };
 
     try {
+        console.log('Sending data:', formData); // Добавляем отладочный вывод
         const response = await fetch('http://192.168.0.149:5000/api/calculate', {
             method: 'POST',
             headers: {
@@ -319,6 +354,7 @@ document.getElementById('calculator-form').addEventListener('submit', async func
         });
 
         const data = await response.json();
+        console.log('Received data:', data); // Добавляем отладочный вывод
         
         if (response.ok) {
             // Обновляем 3D модель
