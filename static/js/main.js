@@ -168,7 +168,7 @@ function createStairModel(dimensions) {
     // Продольные балки основания - от переднего края до заднего
     // Корректируем общую глубину с учетом возможной площадки
     const lastStepDepth = (has_platform && platform_depth > 0) ? platform_depth : step_depth;
-    const totalDepth = step_depth * (steps - 1) + lastStepDepth;
+    const totalDepth = step_depth * (steps - 1) + lastStepDepth - profile_thickness; // Уменьшаем на 20мм
     const baseLongBeamGeometry = new THREE.BoxGeometry(profile_thickness, profile_thickness, totalDepth);
     
     // Левая продольная балка основания
@@ -191,7 +191,7 @@ function createStairModel(dimensions) {
     
     // Задняя поперечина основания (под задними стойками последней ступени)
     const backBaseBeam = new THREE.Mesh(baseBeamGeometry, frameMaterial);
-    backBaseBeam.position.set(0, 0, totalDepth);
+    backBaseBeam.position.set(0, 0, totalDepth); // Теперь она будет на 20мм ближе к переду
     stairModel.add(backBaseBeam);
 
     // 2. Горизонтальные ступени и их опоры
