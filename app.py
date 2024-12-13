@@ -45,7 +45,9 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
             "height": height,
             "step_height": step_height,
             "step_depth": step_depth,
-            "profile_thickness": profile_thickness
+            "profile_thickness": profile_thickness,
+            "has_platform": has_platform,
+            "platform_depth": platform_depth
         }
     }
 

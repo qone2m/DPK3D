@@ -57,9 +57,12 @@ function createStairModel(dimensions) {
     scene.remove(stairModel);
     stairModel = new THREE.Group();
 
-    const {width, height, step_height, step_depth, profile_thickness} = dimensions;
+    const {width, height, step_height, step_depth, profile_thickness, has_platform, platform_depth} = dimensions;
     const steps = Math.round(height / step_height);
 
+    // Определяем глубину последней ступени/площадки
+    const lastStepDepth = (has_platform && platform_depth > 0) ? platform_depth : step_depth;
+    
     // Материал для профиля 20х20
     const frameMaterial = new THREE.MeshPhongMaterial({
         color: 0x404040,
@@ -69,7 +72,8 @@ function createStairModel(dimensions) {
 
     // 1. Горизонтальное основание на земле
     // Продольные балки основания - от переднего края до заднего
-    const totalDepth = step_depth * (steps - 1) + step_depth - profile_thickness; // Корректируем общую глубину
+    // Корректируем общую глубину с учетом возможной площадки
+    const totalDepth = step_depth * (steps - 2) + step_depth + lastStepDepth - profile_thickness;
     const baseLongBeamGeometry = new THREE.BoxGeometry(profile_thickness, profile_thickness, totalDepth);
     
     // Левая продольная балка основания
@@ -97,6 +101,11 @@ function createStairModel(dimensions) {
 
     // 2. Горизонтальные ступени и их опоры
     for (let i = 0; i < steps; i++) {
+        // Проверяем, является ли это последней ступенью и есть ли площадка
+        const isLastStep = i === steps - 1;
+        const isPlatform = isLastStep && has_platform;
+        const currentStepDepth = isPlatform ? platform_depth : step_depth;
+
         // Рама ступени (передняя и задняя балки)
         const stepFrameGeometry = new THREE.BoxGeometry(width, profile_thickness, profile_thickness);
         
@@ -107,20 +116,20 @@ function createStairModel(dimensions) {
         
         // Задняя балка ступени
         const backStepBeam = new THREE.Mesh(stepFrameGeometry, frameMaterial);
-        backStepBeam.position.set(0, (i + 1) * step_height, i * step_depth + step_depth - profile_thickness);
+        backStepBeam.position.set(0, (i + 1) * step_height, i * step_depth + currentStepDepth - profile_thickness);
         stairModel.add(backStepBeam);
         
         // Боковые балки ступени
-        const sideSupportGeometry = new THREE.BoxGeometry(profile_thickness, profile_thickness, step_depth - profile_thickness);
+        const sideSupportGeometry = new THREE.BoxGeometry(profile_thickness, profile_thickness, currentStepDepth - profile_thickness);
         
         // Левая боковая балка
         const leftSideSupport = new THREE.Mesh(sideSupportGeometry, frameMaterial);
-        leftSideSupport.position.set(-width/2 + profile_thickness/2, (i + 1) * step_height, i * step_depth + (step_depth - profile_thickness)/2);
+        leftSideSupport.position.set(-width/2 + profile_thickness/2, (i + 1) * step_height, i * step_depth + (currentStepDepth - profile_thickness)/2);
         stairModel.add(leftSideSupport);
         
         // Правая боковая балка
         const rightSideSupport = new THREE.Mesh(sideSupportGeometry, frameMaterial);
-        rightSideSupport.position.set(width/2 - profile_thickness/2, (i + 1) * step_height, i * step_depth + (step_depth - profile_thickness)/2);
+        rightSideSupport.position.set(width/2 - profile_thickness/2, (i + 1) * step_height, i * step_depth + (currentStepDepth - profile_thickness)/2);
         stairModel.add(rightSideSupport);
 
         // 3. Вертикальные стойки от ступени до основания
@@ -137,13 +146,13 @@ function createStairModel(dimensions) {
         stairModel.add(frontRightStand);
         
         // Задние стойки (только для последней ступени)
-        if (i === steps - 1) {
+        if (isLastStep) {
             const backLeftStand = new THREE.Mesh(leftStandGeometry, frameMaterial);
-            backLeftStand.position.set(-width/2 + profile_thickness/2, ((i + 1) * step_height)/2, i * step_depth + step_depth - profile_thickness);
+            backLeftStand.position.set(-width/2 + profile_thickness/2, ((i + 1) * step_height)/2, i * step_depth + currentStepDepth - profile_thickness);
             stairModel.add(backLeftStand);
             
             const backRightStand = new THREE.Mesh(rightStandGeometry, frameMaterial);
-            backRightStand.position.set(width/2 - profile_thickness/2, ((i + 1) * step_height)/2, i * step_depth + step_depth - profile_thickness);
+            backRightStand.position.set(width/2 - profile_thickness/2, ((i + 1) * step_height)/2, i * step_depth + currentStepDepth - profile_thickness);
             stairModel.add(backRightStand);
         }
     }
@@ -161,6 +170,9 @@ function createStairModel(dimensions) {
     // Усиления для каждой ступени
     for (let i = 0; i < steps; i++) {
         const startY = i * step_height;
+        const isLastStep = i === steps - 1;
+        const currentStepDepth = isLastStep ? lastStepDepth : step_depth;
+        const currentStepZ = i * step_depth; // Позиция начала текущей ступени всегда основана на step_depth
         
         for (let j = 0; j < reinforcementsCount; j++) {
             const xPos = -width/2 + profile_thickness + spacing * (j + 1);
@@ -173,34 +185,29 @@ function createStairModel(dimensions) {
                 stairModel.add(frontStand);
             } else {
                 // Для остальных ступеней - вертикальное усиление между ступенями
-                // Усиление соединяет низ переда вышестоящей ступени 
-                // с задней стороной заднего профиля нижестоящей ступени
                 const standGeometry = new THREE.BoxGeometry(profile_thickness, step_height, profile_thickness);
                 const stand = new THREE.Mesh(standGeometry, frameMaterial);
-                stand.position.set(
-                    xPos, 
-                    startY + step_height/2, 
-                    // Позиционируем у задней части нижестоящей ступени
-                    // и сдвигаем на ширину профиля назад
-                    (i-1) * step_depth + step_depth
-                );
+                // Позиционируем у задней части предыдущей ступени
+                const previousStepZ = (i - 1) * step_depth;
+                stand.position.set(xPos, startY + step_height/2, previousStepZ + step_depth);
                 stairModel.add(stand);
             }
         }
+    }
 
-        // Для последней ступени - дополнительное вертикальное усиление от задней части до основания
-        if (i === steps - 1) {
-            const lastStepZ = i * step_depth;
+    // Для последней ступени - дополнительное вертикальное усиление от задней части до основания
+    if (steps > 1) {
+        const lastStepZ = (steps - 1) * step_depth; // Позиция начала последней ступени
+        
+        for (let j = 0; j < reinforcementsCount; j++) {
+            const xPos = -width/2 + profile_thickness + spacing * (j + 1);
+            const standHeight = steps * step_height;
             
-            for (let j = 0; j < reinforcementsCount; j++) {
-                const xPos = -width/2 + profile_thickness + spacing * (j + 1);
-                const height = (i + 1) * step_height;
-                
-                const backStandGeometry = new THREE.BoxGeometry(profile_thickness, height, profile_thickness);
-                const backStand = new THREE.Mesh(backStandGeometry, frameMaterial);
-                backStand.position.set(xPos, height/2, lastStepZ + step_depth - profile_thickness);
-                stairModel.add(backStand);
-            }
+            const backStandGeometry = new THREE.BoxGeometry(profile_thickness, standHeight, profile_thickness);
+            const backStand = new THREE.Mesh(backStandGeometry, frameMaterial);
+            // Позиционируем у задней части последней ступени/площадки
+            backStand.position.set(xPos, standHeight/2, lastStepZ + lastStepDepth - profile_thickness);
+            stairModel.add(backStand);
         }
     }
 
