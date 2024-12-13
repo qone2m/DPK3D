@@ -24,14 +24,87 @@ function init() {
     directionalLight.position.set(1, 1, 1);
     scene.add(directionalLight);
 
-    // Добавление осей координат
-    const axesHelper = new THREE.AxesHelper(500);
-    scene.add(axesHelper);
-
     // Добавление OrbitControls
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
+
+    // Добавление видового куба
+    const viewCubeCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 100);
+    const viewCubeScene = new THREE.Scene();
+    viewCubeScene.background = new THREE.Color(0xf0f0f0);
+
+    // Создание видового куба
+    const viewCubeSize = 100;
+    const viewCubeGeometry = new THREE.BoxGeometry(viewCubeSize, viewCubeSize, viewCubeSize);
+    const materials = [
+        new THREE.MeshBasicMaterial({ color: 0xe0e0e0, transparent: true, opacity: 0.8 }), // right
+        new THREE.MeshBasicMaterial({ color: 0xe0e0e0, transparent: true, opacity: 0.8 }), // left
+        new THREE.MeshBasicMaterial({ color: 0xe0e0e0, transparent: true, opacity: 0.8 }), // top
+        new THREE.MeshBasicMaterial({ color: 0xe0e0e0, transparent: true, opacity: 0.8 }), // bottom
+        new THREE.MeshBasicMaterial({ color: 0xe0e0e0, transparent: true, opacity: 0.8 }), // front
+        new THREE.MeshBasicMaterial({ color: 0xe0e0e0, transparent: true, opacity: 0.8 })  // back
+    ];
+
+    const viewCube = new THREE.Mesh(viewCubeGeometry, materials);
+    viewCubeScene.add(viewCube);
+
+    // Добавление подписей на гранях куба
+    const loader = new THREE.TextureLoader();
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'black';
+    ctx.font = '20px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const labels = ['Спереди', 'Сзади', 'Сверху', 'Снизу', 'Справа', 'Слева'];
+    labels.forEach((label, index) => {
+        ctx.clearRect(0, 0, 64, 64);
+        ctx.fillText(label, 32, 32);
+        const texture = new THREE.CanvasTexture(canvas);
+        materials[index].map = texture;
+    });
+
+    // Позиционирование видового куба
+    viewCubeCamera.position.set(0, 0, 300);
+    viewCubeCamera.lookAt(0, 0, 0);
+
+    // Создание отдельного рендерера для видового куба
+    const viewCubeRenderer = new THREE.WebGLRenderer({ alpha: true });
+    viewCubeRenderer.setSize(150, 150);
+    viewCubeRenderer.domElement.style.position = 'absolute';
+    viewCubeRenderer.domElement.style.top = '10px';
+    viewCubeRenderer.domElement.style.right = '10px';
+    container.appendChild(viewCubeRenderer.domElement);
+
+    // Обработчик кликов по видовому кубу
+    viewCubeRenderer.domElement.addEventListener('click', function(event) {
+        const rect = viewCubeRenderer.domElement.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        
+        // Определение выбранной грани и установка соответствующего вида
+        if (Math.abs(x) > Math.abs(y)) {
+            if (x > 0) camera.position.set(2000, 0, 0); // Справа
+            else camera.position.set(-2000, 0, 0);      // Слева
+        } else {
+            if (y > 0) camera.position.set(0, 2000, 0); // Сверху
+            else camera.position.set(0, -2000, 0);      // Снизу
+        }
+        camera.lookAt(0, 0, 0);
+        controls.update();
+    });
+
+    // Анимация видового куба
+    function animateViewCube() {
+        requestAnimationFrame(animateViewCube);
+        viewCube.rotation.copy(camera.rotation);
+        viewCubeRenderer.render(viewCubeScene, viewCubeCamera);
+    }
+    animateViewCube();
 
     // Обработчик изменения размера окна
     window.addEventListener('resize', onWindowResize, false);
@@ -288,23 +361,6 @@ document.getElementById('custom-reinforcements').addEventListener('change', func
     } else {
         container.classList.add('hidden');
     }
-});
-
-// Кнопки управления камерой
-document.getElementById('rotate-left').addEventListener('click', () => {
-    controls.rotateLeft(Math.PI / 4);
-});
-
-document.getElementById('rotate-right').addEventListener('click', () => {
-    controls.rotateLeft(-Math.PI / 4);
-});
-
-document.getElementById('zoom-in').addEventListener('click', () => {
-    camera.position.multiplyScalar(0.8);
-});
-
-document.getElementById('zoom-out').addEventListener('click', () => {
-    camera.position.multiplyScalar(1.2);
 });
 
 // Инициализация при загрузке страницы
