@@ -23,12 +23,25 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
 
     # Расчёты
     step_height = height / steps
-    base_length = 2 * width + 2 * step_depth * steps
+    
+    # Расчет длины основания с учетом полезной длины
+    base_frame_length = 2 * width  # 2 ширины целиком
+    base_frame_depth = 2 * step_depth - 4 * profile_thickness  # 2 глубины минус 4 профиля
+    base_length = base_frame_length + base_frame_depth
+    
     if has_platform:
-        base_length += 2 * width + 2 * platform_depth
-    steps_length = steps * (2 * width + 2 * step_depth)
-    vertical_stands = (2 * steps + 2) * step_height
-    vertical_reinforcements = reinforcements_count * steps * step_height
+        platform_frame_length = 2 * width  # 2 ширины целиком
+        platform_frame_depth = 2 * platform_depth - 4 * profile_thickness  # 2 глубины минус 4 профиля
+        base_length += platform_frame_length + platform_frame_depth
+    
+    # Длина профиля для ступеней (2 ширины + 2 полезные глубины для каждой ступени)
+    steps_length = steps * (2 * width + (2 * step_depth - 4 * profile_thickness))
+    
+    # Вертикальные стойки (полезная высота = высота - толщина профиля сверху)
+    vertical_stands = (2 * steps + 2) * (step_height - profile_thickness)
+    
+    # Вертикальные усиления (также с учетом полезной высоты)
+    vertical_reinforcements = reinforcements_count * steps * (step_height - profile_thickness)
     
     # Горизонтальные усиления
     horizontal_reinforcements = 0
@@ -39,7 +52,8 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
             
         # Используем platform_depth для последней ступени если есть площадка
         current_depth = platform_depth if (i == steps - 1 and has_platform) else step_depth
-        horizontal_reinforcements += reinforcements_count * (current_depth - profile_thickness)
+        # Вычитаем толщину профиля с обеих сторон для полезной длины
+        horizontal_reinforcements += reinforcements_count * (current_depth - 2 * profile_thickness)
     
     total_length = base_length + steps_length + vertical_stands + vertical_reinforcements + horizontal_reinforcements
 
