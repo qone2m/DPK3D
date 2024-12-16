@@ -57,6 +57,20 @@
             border-radius: 5px;
             margin-top: 20px;
         }
+        .quick-select {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        .material-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .material-btn.active {
+            background-color: #0d6efd;
+            color: white;
+        }
         @media (max-width: 768px) {
             .control-panel {
                 width: 280px;
@@ -91,6 +105,17 @@
                 left: -30px;
                 border-radius: 5px 0 0 5px;
             }
+            .quick-select button {
+                flex: 1 1 auto;
+                min-width: 60px;
+            }
+            .material-buttons {
+                flex-direction: column;
+            }
+            .material-btn {
+                width: 100%;
+                margin-bottom: 5px;
+            }
         }
     </style>
 </head>
@@ -103,23 +128,43 @@
                 <div class="mb-3">
                     <label for="width" class="form-label">Ширина лестницы (мм)</label>
                     <input type="number" class="form-control" id="width" required>
+                    <div class="quick-select mt-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="800">800</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="1000">1000</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="1200">1200</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-value="1500">1500</button>
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label for="height" class="form-label">Высота лестницы (мм)</label>
                     <input type="number" class="form-control" id="height" required>
+                    <div class="quick-select mt-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="170">170</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="340">340</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="510">510</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="680">680</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-value="850">850</button>
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label for="steps" class="form-label">Количество ступеней</label>
                     <input type="number" class="form-control" id="steps" required>
+                    <div class="quick-select mt-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="1">1</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="2">2</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="3">3</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="4">4</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-value="5">5</button>
+                    </div>
                 </div>
                 <div class="mb-3">
-                    <label for="material" class="form-label">Материал ступеней</label>
-                    <select class="form-select" id="material" required>
-                        <option value="">Выберите материал</option>
-                        <option value="ДПК">ДПК</option>
-                        <option value="ПВЛ">ПВЛ</option>
-                        <option value="ДПК+1 ПВЛ">ДПК+1 ПВЛ</option>
-                    </select>
+                    <label class="form-label">Материал ступеней</label>
+                    <div class="material-buttons">
+                        <input type="hidden" id="material" required>
+                        <button type="button" class="btn btn-outline-primary me-2 material-btn" data-value="ДПК">ДПК</button>
+                        <button type="button" class="btn btn-outline-primary me-2 material-btn" data-value="ПВЛ">ПВЛ</button>
+                        <button type="button" class="btn btn-outline-primary material-btn" data-value="ДПК+1 ПВЛ">ДПК+1 ПВЛ</button>
+                    </div>
                 </div>
                 <div class="mb-3">
                     <div class="form-check">
@@ -144,6 +189,15 @@
                 <div class="mb-3 hidden" id="platform-depth-container">
                     <label for="platform-depth" class="form-label">Глубина площадки (мм)</label>
                     <input type="number" class="form-control" id="platform-depth">
+                    <div class="quick-select mt-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="305">305</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="460">460</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="615">615</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="770">770</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="925">925</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="1080">1080</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-value="1235">1235</button>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-primary w-100">Рассчитать</button>
             </form>

@@ -27,12 +27,6 @@ def validate_input(width, height, steps):
         raise ValueError(f"Ширина должна быть от {app.config['MIN_WIDTH']} до {app.config['MAX_WIDTH']} мм")
     if not app.config['MIN_HEIGHT'] <= height <= app.config['MAX_HEIGHT']:
         raise ValueError(f"Высота должна быть от {app.config['MIN_HEIGHT']} до {app.config['MAX_HEIGHT']} мм")
-    
-    # Для одной ступени пропускаем проверку высоты ступени
-    if steps > 1:
-        step_height = height / steps
-        if not app.config['MIN_STEP_HEIGHT'] <= step_height <= app.config['MAX_STEP_HEIGHT']:
-            raise ValueError(f"Высота ступени ({step_height:.1f} мм) должна быть от {app.config['MIN_STEP_HEIGHT']} до {app.config['MAX_STEP_HEIGHT']} мм")
 
 def calculate_metal(width, height, steps, material, has_platform, platform_depth=0, reinforcements_count=1):
     try:

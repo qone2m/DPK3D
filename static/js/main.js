@@ -3,14 +3,11 @@ const MIN_WIDTH = 600;  // мм
 const MAX_WIDTH = 2000; // мм
 const MIN_HEIGHT = 100; // мм
 const MAX_HEIGHT = 3000; // мм
-const MIN_STEP_HEIGHT = 150; // мм
-const MAX_STEP_HEIGHT = 200; // мм
 
 // Функция валидации формы
 function validateForm() {
     const width = parseFloat(document.getElementById('width').value);
     const height = parseFloat(document.getElementById('height').value);
-    const steps = parseInt(document.getElementById('steps').value);
     
     if (width < MIN_WIDTH || width > MAX_WIDTH) {
         alert(`Ширина должна быть от ${MIN_WIDTH} до ${MAX_WIDTH} мм`);
@@ -20,15 +17,6 @@ function validateForm() {
     if (height < MIN_HEIGHT || height > MAX_HEIGHT) {
         alert(`Высота должна быть от ${MIN_HEIGHT} до ${MAX_HEIGHT} мм`);
         return false;
-    }
-    
-    // Для одной ступени пропускаем проверку высоты ступени
-    if (steps > 1) {
-        const stepHeight = height / steps;
-        if (stepHeight < MIN_STEP_HEIGHT || stepHeight > MAX_STEP_HEIGHT) {
-            alert(`Высота ступени (${stepHeight.toFixed(1)} мм) должна быть от ${MIN_STEP_HEIGHT} до ${MAX_STEP_HEIGHT} мм`);
-            return false;
-        }
     }
     
     return true;
@@ -66,6 +54,38 @@ document.addEventListener('DOMContentLoaded', function() {
             toggleLeft.textContent = '›';
             toggleRight.textContent = '‹';
         }
+    });
+
+    // Обработчики для кнопок быстрого выбора и материалов
+    document.querySelectorAll('.quick-select button').forEach(button => {
+        button.addEventListener('click', function() {
+            const value = this.getAttribute('data-value');
+            const input = this.closest('.mb-3').querySelector('input[type="number"]');
+            input.value = value;
+            // Вызываем событие input для активации валидации
+            input.dispatchEvent(new Event('input'));
+        });
+    });
+
+    // Обработчики для кнопок выбора материала
+    const materialButtons = document.querySelectorAll('.material-btn');
+    const materialInput = document.getElementById('material');
+
+    // Устанавливаем ДПК как материал по умолчанию
+    const defaultMaterialBtn = document.querySelector('.material-btn[data-value="ДПК"]');
+    if (defaultMaterialBtn) {
+        defaultMaterialBtn.classList.add('active');
+        materialInput.value = 'ДПК';
+    }
+
+    materialButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            materialButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            materialInput.value = this.getAttribute('data-value');
+            // Вызываем событие change для активации валидации
+            materialInput.dispatchEvent(new Event('change'));
+        });
     });
 });
 
@@ -582,12 +602,12 @@ document.getElementById('calculator-form').addEventListener('submit', async func
     if (!validateForm()) {
         return;
     }
-    
+
     const formData = {
         width: parseFloat(document.getElementById('width').value),
         height: parseFloat(document.getElementById('height').value),
         steps: parseInt(document.getElementById('steps').value),
-        material: document.getElementById('material').value,
+        material: document.getElementById('material').value || 'ДПК', // Добавляем значение по умолчанию
         has_platform: document.getElementById('has-platform').checked,
         platform_depth: parseFloat(document.getElementById('platform-depth').value || 0),
         reinforcements_count: parseInt(document.getElementById('reinforcements-count').value || 1)
