@@ -146,21 +146,21 @@ const pvlMaterial = new THREE.MeshPhongMaterial({
 });
 
 const boltMaterial = new THREE.MeshPhongMaterial({
-    color: 0x404040,
-    shininess: 60
+    color: 0xC0C0C0,  // Серебристый цвет
+    shininess: 100,    // Высокий блеск
+    specular: 0xFFFFFF // Белые блики
 });
 
 function createBolt() {
     const boltGroup = new THREE.Group();
     
-    // Шляпка болта
-    const headGeometry = new THREE.CylinderGeometry(5, 5, 3, 6);
+    // Шляпка болта (более плоская)
+    const headGeometry = new THREE.CylinderGeometry(4, 4, 2, 16); // Увеличили количество сегментов для гладкости
     const head = new THREE.Mesh(headGeometry, boltMaterial);
-    head.rotation.x = Math.PI; // Поворачиваем шляпку вниз
     boltGroup.add(head);
     
     // Тело болта
-    const bodyGeometry = new THREE.CylinderGeometry(2, 2, 30, 6);
+    const bodyGeometry = new THREE.CylinderGeometry(2, 2, 30, 16);
     const body = new THREE.Mesh(bodyGeometry, boltMaterial);
     body.position.y = -15;
     boltGroup.add(body);
@@ -168,52 +168,53 @@ function createBolt() {
     return boltGroup;
 }
 
-function createDPKBoards(width, depth) {
+function createDPKBoards(width, depth, stepHeight, stepZ) {
     const boardGroup = new THREE.Group();
     const boardDepth = (depth - 5) / 2; // Делим глубину ступени на 2 доски с зазором 5мм
     const boardHeight = 25;
     const gap = 5;
+    const boltInset = 10; // Отступ болтов от края каркаса
 
     // Передняя доска
     const frontBoardGeometry = new THREE.BoxGeometry(width, boardHeight, boardDepth);
     const frontBoard = new THREE.Mesh(frontBoardGeometry, dpkMaterial);
-    // Сдвигаем на 10мм вперед
     frontBoard.position.set(0, boardHeight/2, -10 + boardDepth/2);
     boardGroup.add(frontBoard);
 
     // Задняя доска
     const backBoardGeometry = new THREE.BoxGeometry(width, boardHeight, boardDepth);
     const backBoard = new THREE.Mesh(backBoardGeometry, dpkMaterial);
-    // Сдвигаем на 10мм вперед
     backBoard.position.set(0, boardHeight/2, -10 + depth - boardDepth/2);
     boardGroup.add(backBoard);
 
-    // Добавляем болты к каркасу ступени
+    // Добавляем болты к каркасу ступени на уровне площадки
     const boltPositions = [
-        {x: -width/2 + 30, z: boardDepth/2}, // Передний левый
-        {x: width/2 - 30, z: boardDepth/2},  // Передний правый
-        {x: -width/2 + 30, z: depth - boardDepth/2}, // Задний левый
-        {x: width/2 - 30, z: depth - boardDepth/2}   // Задний правый
+        {x: -width/2 + boltInset, z: boardDepth/2}, // Передний левый
+        {x: width/2 - boltInset, z: boardDepth/2},  // Передний правый
+        {x: -width/2 + boltInset, z: depth - boardDepth/2}, // Задний левый
+        {x: width/2 - boltInset, z: depth - boardDepth/2}   // Задний правый
     ];
 
     boltPositions.forEach(pos => {
         const bolt = createBolt();
-        // Сдвигаем болты на 10мм вперед вместе с досками
-        bolt.position.set(pos.x, 0, -10 + pos.z);
+        // Размещаем болты на 1мм выше поверхности ДПК и на правильной глубине
+        bolt.position.set(pos.x, stepHeight + boardHeight + 1, stepZ - 10 + pos.z);
+        // Болты шляпками вверх (не переворачиваем)
         boltsGroup.add(bolt);
     });
 
     return boardGroup;
 }
 
-function createDPKPlatform(width, depth) {
+function createDPKPlatform(width, depth, stepHeight, stepZ) {
     const boardGroup = new THREE.Group();
     const boardWidth = 150;
     const boardHeight = 25;
     const gap = 5;
+    const boltInset = 10; // Отступ болтов от края каркаса
 
     // Вычисляем количество полных досок и остаток
-    const availableSpace = depth - profile_thickness; // Учитываем задний профиль
+    const availableSpace = depth - profile_thickness;
     const numFullBoards = Math.floor((availableSpace + gap) / (boardWidth + gap));
     let remainingSpace = availableSpace - (numFullBoards * (boardWidth + gap) - gap);
     
@@ -225,22 +226,23 @@ function createDPKPlatform(width, depth) {
         board.position.set(0, boardHeight/2, zPosition);
         boardGroup.add(board);
 
-        // Добавляем болты для каждой доски
+        // Добавляем болты для каждой доски на уровне площадки
         const boltPositions = [
-            {x: -width/2 + 30, z: zPosition},
-            {x: width/2 - 30, z: zPosition},
+            {x: -width/2 + boltInset, z: zPosition}, // Левый
+            {x: width/2 - boltInset, z: zPosition},  // Правый
         ];
 
         boltPositions.forEach(pos => {
             const bolt = createBolt();
-            bolt.position.set(pos.x, 0, pos.z);
+            // Размещаем болты на 1мм выше поверхности ДПК и на правильной глубине
+            bolt.position.set(pos.x, stepHeight + boardHeight + 1, stepZ + pos.z);
+            // Болты шляпками вверх (не переворачиваем)
             boltsGroup.add(bolt);
         });
     }
 
-    // Если есть остаток места больше минимального (например, 50мм), добавляем последнюю обрезанную доску
+    // Если есть остаток места больше минимального, добавляем последнюю обрезанную доску
     if (remainingSpace > 50) {
-        // Обрезаем доску по заднему профилю
         const lastBoardWidth = Math.min(boardWidth, remainingSpace);
         const lastBoardGeometry = new THREE.BoxGeometry(width, boardHeight, lastBoardWidth);
         const lastBoard = new THREE.Mesh(lastBoardGeometry, dpkMaterial);
@@ -250,13 +252,15 @@ function createDPKPlatform(width, depth) {
 
         // Болты для последней доски
         const boltPositions = [
-            {x: -width/2 + 30, z: zPosition},
-            {x: width/2 - 30, z: zPosition},
+            {x: -width/2 + boltInset, z: zPosition}, // Левый
+            {x: width/2 - boltInset, z: zPosition},  // Правый
         ];
 
         boltPositions.forEach(pos => {
             const bolt = createBolt();
-            bolt.position.set(pos.x, 0, pos.z);
+            // Размещаем болты на 1мм выше поверхности ДПК и на правильной глубине
+            bolt.position.set(pos.x, stepHeight + boardHeight + 1, stepZ + pos.z);
+            // Болты шляпками вверх (не переворачиваем)
             boltsGroup.add(bolt);
         });
     }
@@ -272,7 +276,6 @@ function createPVLCover(width, depth) {
     const pvlDepth = depth - 2 * profile_thickness;
     const plateGeometry = new THREE.BoxGeometry(width - 2 * profile_thickness, 2, pvlDepth);
     const plate = new THREE.Mesh(plateGeometry, pvlMaterial);
-    // Позиционируем от заднего края переднего профиля
     plate.position.set(0, 1, profile_thickness + pvlDepth/2);
     pvlGroup.add(plate);
     
@@ -565,13 +568,11 @@ function createStairModel(dimensions) {
 
         if (material === "ДПК" || (material === "ДПК+1 ПВЛ" && i > 0)) {
             if (isLastStep && has_platform) {
-                // Для площадки используем специальную функцию
-                const platformBoards = createDPKPlatform(width, currentStepDepth);
+                const platformBoards = createDPKPlatform(width, currentStepDepth, stepPosition.y, stepPosition.z);
                 platformBoards.position.set(stepPosition.x, stepPosition.y, stepPosition.z);
                 coveringsGroup.add(platformBoards);
             } else {
-                // Для обычных ступеней используем стандартную функцию
-                const dpkBoards = createDPKBoards(width, currentStepDepth);
+                const dpkBoards = createDPKBoards(width, currentStepDepth, stepPosition.y, stepPosition.z);
                 dpkBoards.position.set(stepPosition.x, stepPosition.y, stepPosition.z);
                 coveringsGroup.add(dpkBoards);
             }
