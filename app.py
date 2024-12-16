@@ -54,7 +54,7 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
         # Расчет высоты каркаса с учетом материала
         if material == "ДПК":
             frame_height = height - app.config['DPK_REDUCTION']  # 170 - 25 = 145 мм
-            step_frame_height = step_height - app.config['DPK_REDUCTION']  # 145 мм для одной ступени
+            step_frame_height = step_height - app.config['DPK_REDUCTION']  # для 2 ступеней: 85 - 25 = 60 мм
         elif material == "ДПК+1 ПВЛ":
             if steps == 1:
                 frame_height = height  # Для одной ступени используем ПВЛ
@@ -68,9 +68,9 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
             step_frame_height = step_height
 
         # 1. Основание (прямоугольник)
-        # Основание = 2*ширина + (2*глубина - 4*толщина профиля)
+        # Основание = 2*ширина + (2*глубина*количество_ступеней - 4*толщина профиля)
         base_width_profiles = 2 * width
-        base_depth_profiles = 2 * step_depth - 4 * profile_thickness
+        base_depth_profiles = 2 * step_depth * steps - 4 * profile_thickness
         base_length = base_width_profiles + base_depth_profiles
 
         # 2. Профили для ступеней
@@ -90,35 +90,38 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
         if steps == 1:
             # Для одной ступени: 4 стойки одинаковой высоты
             # Высота стойки = высота каркаса - толщина профиля сверху и снизу
-            stand_height = step_frame_height - 2 * profile_thickness  # 145 - 2 * 20 = 105 мм
-            vertical_stands_length = 4 * stand_height  # 4 * 105 = 420 мм
+            stand_height = step_frame_height - 2 * profile_thickness
+            vertical_stands_length = 4 * stand_height
         else:
             # Для нескольких ступеней
             for i in range(steps):
-                current_height = step_frame_height - 2 * profile_thickness
-                if i == steps - 1:
-                    # Последняя ступень: 4 стойки
-                    vertical_stands_length += 4 * current_height
+                if i == 0:
+                    # Первая ступень: 2 передние стойки
+                    stand_height = step_frame_height - 2 * profile_thickness
+                    vertical_stands_length += 2 * stand_height
                 else:
-                    # Остальные ступени: 2 передние стойки
-                    vertical_stands_length += 2 * current_height
+                    # Последующие ступени: 4 стойки от основания
+                    # Высота = исходная высота * (номер_ступени + 1) - уменьшение ДПК - толщина профиля сверху и снизу
+                    stand_height = (step_height * (i + 1) - app.config['DPK_REDUCTION']) - 2 * profile_thickness
+                    vertical_stands_length += 4 * stand_height
 
         # 4. Усиления
         reinforcements_length = 0
         
         # 4.1 Передние усиления первой ступени
-        front_reinforcement = step_frame_height - 2 * profile_thickness  # Вычитаем места соединений
+        front_reinforcement = step_frame_height - 2 * profile_thickness
         reinforcements_length += reinforcements_count * front_reinforcement
 
         # 4.2 Задние усиления последней ступени/площадки
         back_reinforcement = 0
         if has_platform:
-            back_reinforcement = step_frame_height - 2 * profile_thickness
+            back_reinforcement = (step_height * steps - app.config['DPK_REDUCTION']) - 2 * profile_thickness
             reinforcements_length += reinforcements_count * back_reinforcement
 
-        # 4.3 Внутренние стойки усиления
+        # 4.3 Внутренние усиления
         for i in range(1, steps):
-            internal_height = step_frame_height - 2 * profile_thickness
+            # Высота внутреннего усиления = высота до текущей ступени
+            internal_height = (step_height * (i + 1) - app.config['DPK_REDUCTION']) - 2 * profile_thickness
             reinforcements_length += reinforcements_count * internal_height
 
         # 4.4 Усиления глубины (между ширинами каркаса ступеней)
