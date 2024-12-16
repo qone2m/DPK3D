@@ -41,122 +41,85 @@ let coveringsGroup = new THREE.Group();
 let boltsGroup = new THREE.Group();
 const profile_thickness = 20; // Выносим в глобальную область
 
+// Обработчики для мобильных панелей
+document.addEventListener('DOMContentLoaded', function() {
+    const leftPanel = document.querySelector('.left-panel');
+    const rightPanel = document.querySelector('.right-panel');
+    const toggleLeft = document.querySelector('.toggle-left');
+    const toggleRight = document.querySelector('.toggle-right');
+
+    toggleLeft?.addEventListener('click', () => {
+        leftPanel.classList.toggle('active');
+        toggleLeft.textContent = leftPanel.classList.contains('active') ? '‹' : '›';
+    });
+
+    toggleRight?.addEventListener('click', () => {
+        rightPanel.classList.toggle('active');
+        toggleRight.textContent = rightPanel.classList.contains('active') ? '›' : '‹';
+    });
+
+    // Закрываем панели при клике на canvas в мобильной версии
+    document.getElementById('canvas-container').addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+            leftPanel.classList.remove('active');
+            rightPanel.classList.remove('active');
+            toggleLeft.textContent = '›';
+            toggleRight.textContent = '‹';
+        }
+    });
+});
+
 // Инициализация Three.js
 function init() {
-    // Создание сцены
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
 
-    // Настройка камеры
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
-    camera.position.set(1000, 1000, 1000);
-
-    // Создание рендерера
     const container = document.getElementById('canvas-container');
+    const aspect = container.clientWidth / container.clientHeight;
+    
+    camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 10000);
+    camera.position.set(2000, 1000, 2000);
+    camera.lookAt(0, 0, 0);
+
     renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(container.offsetWidth, container.offsetHeight);
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(renderer.domElement);
 
-    // Добавление освещения
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    directionalLight.position.set(1, 1, 1);
-    scene.add(directionalLight);
-
-    // Добавление OrbitControls
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
+    controls.screenSpacePanning = true;
+    controls.minDistance = 100;
+    controls.maxDistance = 5000;
+    controls.maxPolarAngle = Math.PI / 1.5;
 
-    // Добавление видового куба
-    const viewCubeCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 100);
-    const viewCubeScene = new THREE.Scene();
-    viewCubeScene.background = new THREE.Color(0xf0f0f0);
+    // Добавляем освещение
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
 
-    // Создание видового куба
-    const viewCubeSize = 100;
-    const viewCubeGeometry = new THREE.BoxGeometry(viewCubeSize, viewCubeSize, viewCubeSize);
-    const materials = [
-        new THREE.MeshBasicMaterial({ color: 0xe0e0e0, transparent: true, opacity: 0.8 }), // right
-        new THREE.MeshBasicMaterial({ color: 0xe0e0e0, transparent: true, opacity: 0.8 }), // left
-        new THREE.MeshBasicMaterial({ color: 0xe0e0e0, transparent: true, opacity: 0.8 }), // top
-        new THREE.MeshBasicMaterial({ color: 0xe0e0e0, transparent: true, opacity: 0.8 }), // bottom
-        new THREE.MeshBasicMaterial({ color: 0xe0e0e0, transparent: true, opacity: 0.8 }), // front
-        new THREE.MeshBasicMaterial({ color: 0xe0e0e0, transparent: true, opacity: 0.8 })  // back
-    ];
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(1000, 1000, 1000);
+    scene.add(directionalLight);
 
-    const viewCube = new THREE.Mesh(viewCubeGeometry, materials);
-    viewCubeScene.add(viewCube);
+    // Добавляем оси координат для отладки
+    // const axesHelper = new THREE.AxesHelper(1000);
+    // scene.add(axesHelper);
 
-    // Добавление подписей на гранях куба
-    const loader = new THREE.TextureLoader();
-    const canvas = document.createElement('canvas');
-    canvas.width = 64;
-    canvas.height = 64;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = 'black';
-    ctx.font = '20px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    const labels = ['Спереди', 'Сзади', 'Сверху', 'Снизу', 'Справа', 'Слева'];
-    labels.forEach((label, index) => {
-        ctx.clearRect(0, 0, 64, 64);
-        ctx.fillText(label, 32, 32);
-        const texture = new THREE.CanvasTexture(canvas);
-        materials[index].map = texture;
-    });
-
-    // Позиционирование видового куба
-    viewCubeCamera.position.set(0, 0, 300);
-    viewCubeCamera.lookAt(0, 0, 0);
-
-    // Создание отдельного рендерера для видового куба
-    const viewCubeRenderer = new THREE.WebGLRenderer({ alpha: true });
-    viewCubeRenderer.setSize(150, 150);
-    viewCubeRenderer.domElement.style.position = 'absolute';
-    viewCubeRenderer.domElement.style.top = '10px';
-    viewCubeRenderer.domElement.style.right = '10px';
-    container.appendChild(viewCubeRenderer.domElement);
-
-    // Обработчик кликов по видовому кубу
-    viewCubeRenderer.domElement.addEventListener('click', function(event) {
-        const rect = viewCubeRenderer.domElement.getBoundingClientRect();
-        const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-        
-        // Определение выбранной грани и установка соответствующего вида
-        if (Math.abs(x) > Math.abs(y)) {
-            if (x > 0) camera.position.set(2000, 0, 0); // Справа
-            else camera.position.set(-2000, 0, 0);      // Слева
-        } else {
-            if (y > 0) camera.position.set(0, 2000, 0); // Сверху
-            else camera.position.set(0, -2000, 0);      // Снизу
-        }
-        camera.lookAt(0, 0, 0);
-        controls.update();
-    });
-
-    // Анимация видового куба
-    function animateViewCube() {
-        requestAnimationFrame(animateViewCube);
-        viewCube.rotation.copy(camera.rotation);
-        viewCubeRenderer.render(viewCubeScene, viewCubeCamera);
-    }
-    animateViewCube();
-
-    // Обработчик изменения размера окна
-    window.addEventListener('resize', onWindowResize, false);
-
-    animate();
+    scene.add(stairModel);
+    scene.add(coveringsGroup);
+    scene.add(boltsGroup);
 }
 
+// Обновляем функцию изменения размера
 function onWindowResize() {
     const container = document.getElementById('canvas-container');
-    camera.aspect = container.offsetWidth / container.offsetHeight;
+    const aspect = container.clientWidth / container.clientHeight;
+    
+    camera.aspect = aspect;
     camera.updateProjectionMatrix();
-    renderer.setSize(container.offsetWidth, container.offsetHeight);
+    
+    renderer.setSize(container.clientWidth, container.clientHeight);
 }
 
 function animate() {
