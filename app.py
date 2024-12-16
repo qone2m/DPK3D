@@ -95,15 +95,24 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
         else:
             # Для нескольких ступеней
             for i in range(steps):
-                if i == 0:
-                    # Первая ступень: 2 передние стойки
-                    stand_height = step_frame_height - 2 * profile_thickness
-                    vertical_stands_length += 2 * stand_height
-                else:
-                    # Последующие ступени: 4 стойки от основания
-                    # Высота = исходная высота * (номер_ступени + 1) - уменьшение ДПК - толщина профиля сверху и снизу
-                    stand_height = (step_height * (i + 1) - app.config['DPK_REDUCTION']) - 2 * profile_thickness
+                # Базовая высота для текущей ступени
+                current_height = step_height * (i + 1)
+                if material == "ДПК":
+                    current_height -= app.config['DPK_REDUCTION']
+                elif material == "ДПК+1 ПВЛ":
+                    # Для первой ступени ПВЛ не вычитаем, для остальных вычитаем
+                    if i > 0:
+                        current_height -= app.config['DPK_REDUCTION']
+                
+                # Вычитаем толщину профиля сверху и снизу
+                stand_height = current_height - 2 * profile_thickness
+                
+                if i == steps - 1:
+                    # Последняя ступень: 4 стойки полной высоты
                     vertical_stands_length += 4 * stand_height
+                else:
+                    # Все остальные ступени: только 2 передние стойки
+                    vertical_stands_length += 2 * stand_height
 
         # 4. Усиления
         reinforcements_length = 0
@@ -112,23 +121,23 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
         front_reinforcement = step_frame_height - 2 * profile_thickness
         reinforcements_length += reinforcements_count * front_reinforcement
 
-        # 4.2 Задние усиления последней ступени/площадки
-        back_reinforcement = 0
-        if has_platform:
-            back_reinforcement = (step_height * steps - app.config['DPK_REDUCTION']) - 2 * profile_thickness
-            reinforcements_length += reinforcements_count * back_reinforcement
-
-        # 4.3 Внутренние усиления
+        # 4.2 Внутренние усиления
         for i in range(1, steps):
             # Высота внутреннего усиления = высота до текущей ступени
-            internal_height = (step_height * (i + 1) - app.config['DPK_REDUCTION']) - 2 * profile_thickness
+            current_height = step_height * (i + 1)
+            if material == "ДПК":
+                current_height -= app.config['DPK_REDUCTION']
+            elif material == "ДПК+1 ПВЛ" and i > 0:
+                current_height -= app.config['DPK_REDUCTION']
+            
+            internal_height = current_height - 2 * profile_thickness
             reinforcements_length += reinforcements_count * internal_height
 
-        # 4.4 Усиления глубины (между ширинами каркаса ступеней)
+        # 4.3 Усиления глубины (между ширинами каркаса ступеней)
         depth_reinforcements = 0
         for i in range(steps):
             current_depth = platform_depth if (i == steps - 1 and has_platform) else step_depth
-            useful_depth = current_depth - 2 * profile_thickness  # вычитаем толщину профилей
+            useful_depth = current_depth - 2 * profile_thickness
             if material != "ПВЛ" and not (material == "ДПК+1 ПВЛ" and i == 0):
                 depth_reinforcements += reinforcements_count * useful_depth
 
@@ -145,8 +154,7 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
             "vertical_stands": round(vertical_stands_length),
             "reinforcements": {
                 "front": round(front_reinforcement * reinforcements_count),
-                "back": round(back_reinforcement * reinforcements_count) if has_platform else 0,
-                "internal": round((reinforcements_length - front_reinforcement - (back_reinforcement if has_platform else 0)) * reinforcements_count),
+                "internal": round((reinforcements_length - front_reinforcement) * reinforcements_count),
                 "depth": round(depth_reinforcements),
                 "total": round(total_reinforcements)
             },
