@@ -563,17 +563,24 @@ function createStairModel(dimensions) {
     controls.update();
 }
 
-// Функция обновления результатов
+// Обновляем функцию изменения результатов
 function updateResults(result) {
     const resultDiv = document.getElementById('result');
     const resultDetails = document.getElementById('result-details');
     resultDiv.classList.remove('hidden');
     
     resultDetails.innerHTML = `
-        <p><strong>Длина профиля для основания:</strong> ${result.base_length} мм</p>
-        <p><strong>Длина профиля для ступеней:</strong> ${result.steps_length} мм</p>
+        <p><strong>Длина профиля для основания:</strong> ${result.base_frame} мм</p>
+        <p><strong>Длина профиля для ступеней:</strong> ${result.total_steps_frames} мм</p>
         <p><strong>Длина профиля для вертикальных стоек:</strong> ${result.vertical_stands} мм</p>
-        <p><strong>Длина профиля для усилений:</strong> ${result.reinforcements} мм</p>
+        <p><strong>Длина профиля для усилений:</strong></p>
+        <ul>
+            <li>Передние усиления: ${result.reinforcements.front} мм</li>
+            <li>Задние усиления: ${result.reinforcements.back} мм</li>
+            <li>Внутренние усиления: ${result.reinforcements.internal} мм</li>
+            <li>Усиления глубины: ${result.reinforcements.depth} мм</li>
+            <li>Всего усилений: ${result.reinforcements.total} мм</li>
+        </ul>
         <p><strong>Общая длина профиля:</strong> ${result.total_length} мм</p>
     `;
 }

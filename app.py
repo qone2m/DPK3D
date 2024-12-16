@@ -33,10 +33,10 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
         validate_input(width, height, steps)
         
         # Используем константы из конфигурации
-        profile_thickness = app.config['PROFILE_THICKNESS']
-        dpk_depth = app.config['DPK_DEPTH']
-        pvl_depth = app.config['PVL_DEPTH']
-        dpk_reduction = app.config['DPK_REDUCTION']
+        profile_thickness = app.config['PROFILE_THICKNESS']  # 20 мм
+        dpk_depth = app.config['DPK_DEPTH']  # 305 мм
+        pvl_depth = app.config['PVL_DEPTH']  # 300 мм
+        dpk_reduction = app.config['DPK_REDUCTION']  # 25 мм
 
         # Определяем глубину ступени в зависимости от материала
         if material == "ПВЛ":
@@ -53,59 +53,107 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
         
         # Расчет высоты каркаса с учетом материала
         if material == "ДПК":
-            frame_height = height - app.config['DPK_REDUCTION']
+            frame_height = height - app.config['DPK_REDUCTION']  # 170 - 25 = 145 мм
+            step_frame_height = step_height - app.config['DPK_REDUCTION']  # 145 мм для одной ступени
         elif material == "ДПК+1 ПВЛ":
             if steps == 1:
                 frame_height = height  # Для одной ступени используем ПВЛ
+                step_frame_height = step_height
             else:
                 # Для первой ступени - полная высота (ПВЛ), для остальных - уменьшенная (ДПК)
                 frame_height = height - (app.config['DPK_REDUCTION'] * (steps - 1) / steps)
+                step_frame_height = step_height - app.config['DPK_REDUCTION']
         else:
             frame_height = height
+            step_frame_height = step_height
 
-        # Расчет длины основания с учетом полезной длины
-        base_frame_length = 2 * width  # 2 ширины целиком
-        base_frame_depth = 2 * step_depth - 4 * profile_thickness  # 2 глубины минус 4 профиля
-        base_length = base_frame_length + base_frame_depth
-        
-        if has_platform:
-            platform_frame_length = 2 * width  # 2 ширины целиком
-            platform_frame_depth = 2 * platform_depth - 4 * profile_thickness  # 2 глубины минус 4 профиля
-            base_length += platform_frame_length + platform_frame_depth
-        
-        # Длина профиля для ступеней (2 ширины + 2 полезные глубины для каждой ступени)
-        steps_length = steps * (2 * width + (2 * step_depth - 4 * profile_thickness))
-        
-        # Вертикальные стойки (полезная высота = высота - толщина профиля сверху)
-        vertical_stands = (2 * steps + 2) * (frame_height - profile_thickness)
-        
-        # Вертикальные усиления (также с учетом полезной высоты)
-        vertical_reinforcements = reinforcements_count * steps * (frame_height - profile_thickness)
-        
-        # Горизонтальные усиления
-        horizontal_reinforcements = 0
+        # 1. Основание (прямоугольник)
+        # Основание = 2*ширина + (2*глубина - 4*толщина профиля)
+        base_width_profiles = 2 * width
+        base_depth_profiles = 2 * step_depth - 4 * profile_thickness
+        base_length = base_width_profiles + base_depth_profiles
+
+        # 2. Профили для ступеней
+        # Ступени = (2*ширина + (2*глубина - 4*толщина профиля)) * количество ступеней
+        steps_frames = []
+        total_steps_length = 0
         for i in range(steps):
-            # Пропускаем усиления для ПВЛ и первой ступени в ДПК+1 ПВЛ
-            if material == "ПВЛ" or (material == "ДПК+1 ПВЛ" and i == 0):
-                continue
-            
-            # Используем platform_depth для последней ступени если есть площадка
+            frame_width = 2 * width
             current_depth = platform_depth if (i == steps - 1 and has_platform) else step_depth
-            # Вычитаем толщину профиля с обеих сторон для полезной длины
-            horizontal_reinforcements += reinforcements_count * (current_depth - 2 * profile_thickness)
+            frame_depth = 2 * current_depth - 4 * profile_thickness
+            frame_total = frame_width + frame_depth
+            steps_frames.append(frame_total)
+            total_steps_length += frame_total
+
+        # 3. Вертикальные стойки
+        vertical_stands_length = 0
+        if steps == 1:
+            # Для одной ступени: 4 стойки одинаковой высоты
+            # Высота стойки = высота каркаса - толщина профиля сверху и снизу
+            stand_height = step_frame_height - 2 * profile_thickness  # 145 - 2 * 20 = 105 мм
+            vertical_stands_length = 4 * stand_height  # 4 * 105 = 420 мм
+        else:
+            # Для нескольких ступеней
+            for i in range(steps):
+                current_height = step_frame_height - 2 * profile_thickness
+                if i == steps - 1:
+                    # Последняя ступень: 4 стойки
+                    vertical_stands_length += 4 * current_height
+                else:
+                    # Остальные ступени: 2 передние стойки
+                    vertical_stands_length += 2 * current_height
+
+        # 4. Усиления
+        reinforcements_length = 0
         
-        total_length = base_length + steps_length + vertical_stands + vertical_reinforcements + horizontal_reinforcements
+        # 4.1 Передние усиления первой ступени
+        front_reinforcement = step_frame_height - 2 * profile_thickness  # Вычитаем места соединений
+        reinforcements_length += reinforcements_count * front_reinforcement
+
+        # 4.2 Задние усиления последней ступени/площадки
+        back_reinforcement = 0
+        if has_platform:
+            back_reinforcement = step_frame_height - 2 * profile_thickness
+            reinforcements_length += reinforcements_count * back_reinforcement
+
+        # 4.3 Внутренние стойки усиления
+        for i in range(1, steps):
+            internal_height = step_frame_height - 2 * profile_thickness
+            reinforcements_length += reinforcements_count * internal_height
+
+        # 4.4 Усиления глубины (между ширинами каркаса ступеней)
+        depth_reinforcements = 0
+        for i in range(steps):
+            current_depth = platform_depth if (i == steps - 1 and has_platform) else step_depth
+            useful_depth = current_depth - 2 * profile_thickness  # вычитаем толщину профилей
+            if material != "ПВЛ" and not (material == "ДПК+1 ПВЛ" and i == 0):
+                depth_reinforcements += reinforcements_count * useful_depth
+
+        # Общая длина всех усилений
+        total_reinforcements = reinforcements_length + depth_reinforcements
+
+        # Итоговая полезная длина всего профиля
+        total_length = base_length + total_steps_length + vertical_stands_length + total_reinforcements
 
         return {
-            "base_length": round(base_length),
-            "steps_length": round(steps_length),
-            "vertical_stands": round(vertical_stands),
-            "reinforcements": round(vertical_reinforcements + horizontal_reinforcements),
+            "base_frame": round(base_length),
+            "steps_frames": [round(length) for length in steps_frames],
+            "total_steps_frames": round(total_steps_length),
+            "vertical_stands": round(vertical_stands_length),
+            "reinforcements": {
+                "front": round(front_reinforcement * reinforcements_count),
+                "back": round(back_reinforcement * reinforcements_count) if has_platform else 0,
+                "internal": round((reinforcements_length - front_reinforcement - (back_reinforcement if has_platform else 0)) * reinforcements_count),
+                "depth": round(depth_reinforcements),
+                "total": round(total_reinforcements)
+            },
             "total_length": round(total_length),
             "dimensions": {
                 "width": width,
                 "height": height,
                 "step_height": step_height,
+                "frame_height": frame_height,
+                "step_frame_height": step_frame_height,
                 "step_depth": step_depth,
                 "profile_thickness": profile_thickness,
                 "has_platform": has_platform,
