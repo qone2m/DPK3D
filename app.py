@@ -2,14 +2,25 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from config import DevelopmentConfig, ProductionConfig
 import logging
+from logging.handlers import RotatingFileHandler
+import os
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig if app.debug else ProductionConfig)
 CORS(app)
 
 # Настройка логирования
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+if not os.path.exists('logs'):
+    os.makedirs('logs')
+
+file_handler = RotatingFileHandler('logs/app.log', maxBytes=10240, backupCount=10)
+file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+))
+file_handler.setLevel(logging.INFO)
+app.logger.addHandler(file_handler)
+app.logger.setLevel(logging.INFO)
+app.logger.info('Stair Calculator startup')
 
 def validate_input(width, height, steps):
     if not app.config['MIN_WIDTH'] <= width <= app.config['MAX_WIDTH']:
@@ -98,7 +109,7 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
             }
         }
     except ValueError as e:
-        logger.error(f"Ошибка валидации: {e}")
+        app.logger.error(f"Ошибка валидации: {e}")
         return None
 
 @app.route('/')
@@ -123,7 +134,7 @@ def calculate():
 
         return jsonify(result)
     except (KeyError, ValueError) as e:
-        logger.error(f"Ошибка обработки запроса: {e}")
+        app.logger.error(f"Ошибка обработки запроса: {e}")
         return jsonify({"error": str(e)}), 400
 
 if __name__ == '__main__':
