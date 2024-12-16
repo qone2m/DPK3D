@@ -57,6 +57,18 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
         # Расчёты
         step_height = height / steps
         
+        # Расчет высоты каркаса с учетом материала
+        if material == "ДПК":
+            frame_height = height - app.config['DPK_REDUCTION']
+        elif material == "ДПК+1 ПВЛ":
+            if steps == 1:
+                frame_height = height  # Для одной ступени используем ПВЛ
+            else:
+                # Для первой ступени - полная высота (ПВЛ), для остальных - уменьшенная (ДПК)
+                frame_height = height - (app.config['DPK_REDUCTION'] * (steps - 1) / steps)
+        else:
+            frame_height = height
+
         # Расчет длины основания с учетом полезной длины
         base_frame_length = 2 * width  # 2 ширины целиком
         base_frame_depth = 2 * step_depth - 4 * profile_thickness  # 2 глубины минус 4 профиля
@@ -71,10 +83,10 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
         steps_length = steps * (2 * width + (2 * step_depth - 4 * profile_thickness))
         
         # Вертикальные стойки (полезная высота = высота - толщина профиля сверху)
-        vertical_stands = (2 * steps + 2) * (step_height - profile_thickness)
+        vertical_stands = (2 * steps + 2) * (frame_height - profile_thickness)
         
         # Вертикальные усиления (также с учетом полезной высоты)
-        vertical_reinforcements = reinforcements_count * steps * (step_height - profile_thickness)
+        vertical_reinforcements = reinforcements_count * steps * (frame_height - profile_thickness)
         
         # Горизонтальные усиления
         horizontal_reinforcements = 0

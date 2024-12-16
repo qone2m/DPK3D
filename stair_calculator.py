@@ -49,10 +49,34 @@ class Visualization3DWindow(QMainWindow):
         
         # Константы
         profile_thickness = 20
+        dpk_reduction = 25  # Высота доски ДПК
         step_height = height / steps
         
+        # Корректируем высоту каркаса для разных материалов
+        if material == "ДПК":
+            frame_height = height - dpk_reduction
+        elif material == "ДПК+1 ПВЛ":
+            if steps == 1:
+                frame_height = height  # Для одной ступени используем ПВЛ
+            else:
+                # Для первой ступени - полная высота (ПВЛ), для остальных - уменьшенная (ДПК)
+                frame_height = height - (dpk_reduction * (steps - 1) / steps)
+        else:
+            frame_height = height
+            
         # Создаем каркас лестницы
         for i in range(steps):
+            # Определяем высоту для текущей ступени
+            if material == "ДПК+1 ПВЛ" and steps > 1:
+                if i == 0:
+                    current_step_height = step_height  # Первая ступень ПВЛ
+                else:
+                    current_step_height = step_height - dpk_reduction  # Остальные ступени ДПК
+            elif material == "ДПК":
+                current_step_height = step_height - dpk_reduction
+            else:
+                current_step_height = step_height
+                
             # Создаем ступень
             step = vtk.vtkCubeSource()
             step.SetXLength(width)
@@ -61,7 +85,16 @@ class Visualization3DWindow(QMainWindow):
             
             # Позиционируем ступень
             transform = vtk.vtkTransform()
-            transform.Translate(0, i * step_height, i * 300)
+            if material == "ДПК+1 ПВЛ" and steps > 1:
+                if i == 0:
+                    transform.Translate(0, i * step_height, i * 300)
+                else:
+                    cumulative_height = step_height + (i - 1) * (step_height - dpk_reduction)
+                    transform.Translate(0, cumulative_height, i * 300)
+            elif material == "ДПК":
+                transform.Translate(0, i * (step_height - dpk_reduction), i * 300)
+            else:
+                transform.Translate(0, i * step_height, i * 300)
             
             # Применяем трансформацию
             transformFilter = vtk.vtkTransformPolyDataFilter()
@@ -85,11 +118,14 @@ class Visualization3DWindow(QMainWindow):
                 # Левая стойка
                 left_support = vtk.vtkCubeSource()
                 left_support.SetXLength(profile_thickness)
-                left_support.SetYLength(step_height)
+                left_support.SetYLength(frame_height/steps)
                 left_support.SetZLength(profile_thickness)
                 
                 left_transform = vtk.vtkTransform()
-                left_transform.Translate(0, i * step_height + step_height/2, i * 300)
+                if material == "ДПК":
+                    left_transform.Translate(0, i * frame_height/steps + (frame_height/steps)/2, i * 300)
+                else:
+                    left_transform.Translate(0, i * step_height + step_height/2, i * 300)
                 
                 left_filter = vtk.vtkTransformPolyDataFilter()
                 left_filter.SetInputConnection(left_support.GetOutputPort())
@@ -108,11 +144,14 @@ class Visualization3DWindow(QMainWindow):
                 # Правая стойка
                 right_support = vtk.vtkCubeSource()
                 right_support.SetXLength(profile_thickness)
-                right_support.SetYLength(step_height)
+                right_support.SetYLength(frame_height/steps)
                 right_support.SetZLength(profile_thickness)
                 
                 right_transform = vtk.vtkTransform()
-                right_transform.Translate(width, i * step_height + step_height/2, i * 300)
+                if material == "ДПК":
+                    right_transform.Translate(width, i * frame_height/steps + (frame_height/steps)/2, i * 300)
+                else:
+                    right_transform.Translate(width, i * step_height + step_height/2, i * 300)
                 
                 right_filter = vtk.vtkTransformPolyDataFilter()
                 right_filter.SetInputConnection(right_support.GetOutputPort())
