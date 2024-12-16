@@ -1,3 +1,39 @@
+// Константы для валидации
+const MIN_WIDTH = 600;  // мм
+const MAX_WIDTH = 2000; // мм
+const MIN_HEIGHT = 100; // мм
+const MAX_HEIGHT = 3000; // мм
+const MIN_STEP_HEIGHT = 150; // мм
+const MAX_STEP_HEIGHT = 200; // мм
+
+// Функция валидации формы
+function validateForm() {
+    const width = parseFloat(document.getElementById('width').value);
+    const height = parseFloat(document.getElementById('height').value);
+    const steps = parseInt(document.getElementById('steps').value);
+    
+    if (width < MIN_WIDTH || width > MAX_WIDTH) {
+        alert(`Ширина должна быть от ${MIN_WIDTH} до ${MAX_WIDTH} мм`);
+        return false;
+    }
+    
+    if (height < MIN_HEIGHT || height > MAX_HEIGHT) {
+        alert(`Высота должна быть от ${MIN_HEIGHT} до ${MAX_HEIGHT} мм`);
+        return false;
+    }
+    
+    // Для одной ступени пропускаем проверку высоты ступени
+    if (steps > 1) {
+        const stepHeight = height / steps;
+        if (stepHeight < MIN_STEP_HEIGHT || stepHeight > MAX_STEP_HEIGHT) {
+            alert(`Высота ступени (${stepHeight.toFixed(1)} мм) должна быть от ${MIN_STEP_HEIGHT} до ${MAX_STEP_HEIGHT} мм`);
+            return false;
+        }
+    }
+    
+    return true;
+}
+
 // Глобальные переменные
 let scene, camera, renderer, controls;
 let stairModel = new THREE.Group();
@@ -596,9 +632,45 @@ function createStairModel(dimensions) {
     controls.update();
 }
 
+// Функция обновления результатов
+function updateResults(result) {
+    const resultDiv = document.getElementById('result');
+    const resultDetails = document.getElementById('result-details');
+    resultDiv.classList.remove('hidden');
+    
+    resultDetails.innerHTML = `
+        <p><strong>Длина профиля для основания:</strong> ${result.base_length} мм</p>
+        <p><strong>Длина профиля для ступеней:</strong> ${result.steps_length} мм</p>
+        <p><strong>Длина профиля для вертикальных стоек:</strong> ${result.vertical_stands} мм</p>
+        <p><strong>Длина профиля для усилений:</strong> ${result.reinforcements} мм</p>
+        <p><strong>Общая длина профиля:</strong> ${result.total_length} мм</p>
+    `;
+}
+
+// Функция обновления 3D модели
+function updateStairsModel(dimensions) {
+    // Очищаем существующую модель
+    while(stairModel.children.length > 0) {
+        stairModel.remove(stairModel.children[0]);
+    }
+    while(coveringsGroup.children.length > 0) {
+        coveringsGroup.remove(coveringsGroup.children[0]);
+    }
+    while(boltsGroup.children.length > 0) {
+        boltsGroup.remove(boltsGroup.children[0]);
+    }
+    
+    // Создаем новую модель
+    createStairModel(dimensions);
+}
+
 // Обработчики событий
 document.getElementById('calculator-form').addEventListener('submit', async function(e) {
     e.preventDefault();
+    
+    if (!validateForm()) {
+        return;
+    }
     
     const formData = {
         width: parseFloat(document.getElementById('width').value),
@@ -606,46 +678,34 @@ document.getElementById('calculator-form').addEventListener('submit', async func
         steps: parseInt(document.getElementById('steps').value),
         material: document.getElementById('material').value,
         has_platform: document.getElementById('has-platform').checked,
-        platform_depth: document.getElementById('has-platform').checked ? 
-            parseFloat(document.getElementById('platform-depth').value) : 0,
-        reinforcements_count: parseInt(document.getElementById('reinforcements-count').value) || 1
+        platform_depth: parseFloat(document.getElementById('platform-depth').value || 0),
+        reinforcements_count: parseInt(document.getElementById('reinforcements-count').value || 1)
     };
-
+    
     try {
-        console.log('Sending data:', formData); // Добавляем отладочный вывод
-        const response = await fetch('http://192.168.0.149:5000/api/calculate', {
+        const response = await fetch('/api/calculate', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(formData)
         });
-
-        const data = await response.json();
-        console.log('Received data:', data); // Добавляем отладочный вывод
         
-        if (response.ok) {
-            // Обновляем 3D модель
-            createStairModel(data.dimensions);
-            
-            // Отображаем результаты
-            const resultDiv = document.getElementById('result');
-            const resultDetails = document.getElementById('result-details');
-            resultDiv.classList.remove('hidden');
-            
-            resultDetails.innerHTML = `
-                <p><strong>Длина профиля для основания:</strong> ${data.base_length} мм</p>
-                <p><strong>Длина профиля для ступеней:</strong> ${data.steps_length} мм</p>
-                <p><strong>Длина профиля для вертикальных стоек:</strong> ${data.vertical_stands} мм</p>
-                <p><strong>Длина профиля для усилений:</strong> ${data.reinforcements} мм</p>
-                <p><strong>Общая длина профиля:</strong> ${data.total_length} мм</p>
-            `;
-        } else {
-            alert(data.error || 'Произошла ошибка при расчете');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Ошибка сервера');
         }
+        
+        const result = await response.json();
+        updateResults(result);
+        updateStairsModel(result.dimensions);
+        
     } catch (error) {
-        console.error('Error:', error);
-        alert('Произошла ошибка при отправке запроса');
+        if (!navigator.onLine) {
+            alert('Отсутствует подключение к интернету');
+        } else {
+            alert(`Ошибка: ${error.message}`);
+        }
     }
 });
 
@@ -673,5 +733,11 @@ document.getElementById('additional-bolts').addEventListener('change', function(
     recalculateStairs();
 });
 
-// Инициализация при загрузке страницы
-init();
+// Инициализируем Three.js при загрузке страницы
+window.addEventListener('load', function() {
+    init();
+    animate();
+});
+
+// Обновляем размер при изменении окна
+window.addEventListener('resize', onWindowResize, false);
