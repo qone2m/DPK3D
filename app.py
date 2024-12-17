@@ -144,12 +144,22 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
         # Общая длина всех усилений
         total_reinforcements = (front_reinforcement + back_reinforcement + total_internal_reinforcement) * reinforcements_count + depth_reinforcements
 
-        # Итоговая полезная длина всего профиля
-        total_length = base_length + total_steps_length + vertical_stands_length + total_reinforcements
+        # Расчет количества и длины полосок для проушин
+        strip_length = 160  # мм
+        strip_width = 40    # мм
+        strip_thickness = 4 # мм
+        strips_count = 2    # 2 проушины на изделие
 
+        # Расчет площади покраски полосок (учитываем все стороны)
+        strip_perimeter = (strip_width * 2 + strip_thickness * 2)  # периметр в разрезе
+        strip_paint_area = (strip_perimeter * strip_length * strips_count) / 1000000  # площадь в м²
+        
+        # Добавляем площадь полосок к общей площади покраски
+        total_paint_area = 0
         # Расчет площади покраски (периметр профиля * длина)
         profile_perimeter = 20 * 4  # 20мм - сторона профиля, 4 стороны
-        total_paint_area = (profile_perimeter * total_length) / 1000000  # Площадь в м²
+        total_paint_area = (profile_perimeter * (base_length + total_steps_length + vertical_stands_length + total_reinforcements)) / 1000000  # Площадь в м²
+        total_paint_area += strip_paint_area
         paint_weight = total_paint_area * paint_consumption  # Вес краски в граммах
 
         # Расчет метража доски ДПК (если используется)
@@ -204,15 +214,20 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
                 "total": {"mm": round(total_reinforcements), "m": round(total_reinforcements / 1000, 2)}
             },
             "total_length": {
-                "mm": round(total_length),
-                "m": round(total_length / 1000, 2)
+                "mm": round(base_length + total_steps_length + vertical_stands_length + total_reinforcements + strip_length * strips_count),
+                "m": round((base_length + total_steps_length + vertical_stands_length + total_reinforcements + strip_length * strips_count) / 1000, 2)
             },
             "additional_materials": {
                 "dpk_length": round(dpk_length / 1000, 2),  # Метраж в метрах
                 "dpk_boards": dpk_boards_count,  # Количество досок
                 "pvl_area": round(pvl_area, 2),  # Площадь в м²
                 "bolts_count": bolts_count,
-                "nuts_count": nuts_count
+                "nuts_count": nuts_count,
+                "mounting_strips": {
+                    "count": strips_count,
+                    "size": f"{strip_length}x{strip_width}x{strip_thickness}",
+                    "total_length": strip_length * strips_count
+                }
             },
             "paint": {
                 "area": round(total_paint_area, 2),  # Площадь покраски в м²

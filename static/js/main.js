@@ -613,6 +613,7 @@ function updateResults(result) {
                 <div>Гайки: ${result.additional_materials.nuts_count} шт</div>
             ` : ''}
             ${result.additional_materials.pvl_area > 0 ? `<div>Площадь ПВЛ: ${result.additional_materials.pvl_area} м²</div>` : ''}
+            <div>Полоса 40мм: ${result.additional_materials.mounting_strips.total_length}мм (${result.additional_materials.mounting_strips.total_length/1000}м)</div>
             <div>Площадь покраски: ${result.paint.area} м²</div>
             <div>Краска: ${result.paint.weight} г (при расходе ${result.paint.consumption} г/м²)</div>
         </div>
