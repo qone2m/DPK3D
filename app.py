@@ -121,19 +121,15 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
         front_reinforcement = step_frame_height - 2 * profile_thickness
         reinforcements_length += reinforcements_count * front_reinforcement
 
-        # 4.2 Внутренние усиления
-        for i in range(1, steps):
-            # Высота внутреннего усиления = высота до текущей ступени
-            current_height = step_height * (i + 1)
-            if material == "ДПК":
-                current_height -= app.config['DPK_REDUCTION']
-            elif material == "ДПК+1 ПВЛ" and i > 0:
-                current_height -= app.config['DPK_REDUCTION']
-            
-            internal_height = current_height - 2 * profile_thickness
-            reinforcements_length += reinforcements_count * internal_height
-
-        # 4.3 Усиления глубины (между ширинами каркаса ступеней)
+        # 4.2 Задние усиления (для последней ступени)
+        back_reinforcement = (step_height * steps - (material == "ДПК" and app.config['DPK_REDUCTION'])) - 2 * profile_thickness
+        
+        # 4.3 Внутренние усиления (170мм на каждое усиление между ступенями)
+        internal_reinforcement = 170  # Фиксированная длина внутреннего усиления
+        # Количество внутренних усилений = (количество ступеней - 1)
+        total_internal_reinforcement = internal_reinforcement * (steps - 1)
+        
+        # 4.4 Усиления глубины (между ширинами каркаса ступеней)
         depth_reinforcements = 0
         for i in range(steps):
             current_depth = platform_depth if (i == steps - 1 and has_platform) else step_depth
@@ -142,7 +138,7 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
                 depth_reinforcements += reinforcements_count * useful_depth
 
         # Общая длина всех усилений
-        total_reinforcements = reinforcements_length + depth_reinforcements
+        total_reinforcements = (front_reinforcement + back_reinforcement + total_internal_reinforcement) * reinforcements_count + depth_reinforcements
 
         # Итоговая полезная длина всего профиля
         total_length = base_length + total_steps_length + vertical_stands_length + total_reinforcements
@@ -154,7 +150,8 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
             "vertical_stands": round(vertical_stands_length),
             "reinforcements": {
                 "front": round(front_reinforcement * reinforcements_count),
-                "internal": round((reinforcements_length - front_reinforcement) * reinforcements_count),
+                "back": round(back_reinforcement * reinforcements_count),
+                "internal": round(total_internal_reinforcement * reinforcements_count),
                 "depth": round(depth_reinforcements),
                 "total": round(total_reinforcements)
             },
