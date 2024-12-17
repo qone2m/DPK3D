@@ -586,18 +586,25 @@ function updateResults(result) {
     resultDiv.classList.remove('hidden');
     
     resultDetails.innerHTML = `
-        <p><strong>Длина профиля для основания:</strong> ${result.base_frame} мм</p>
-        <p><strong>Длина профиля для ступеней:</strong> ${result.total_steps_frames} мм</p>
-        <p><strong>Длина профиля для вертикальных стоек:</strong> ${result.vertical_stands} мм</p>
-        <p><strong>Длина профиля для усилений:</strong></p>
-        <ul>
-            <li>Передние усиления: ${result.reinforcements.front} мм</li>
-            <li>Задние усиления: ${result.reinforcements.back} мм</li>
-            <li>Внутренние усиления: ${result.reinforcements.internal} мм</li>
-            <li>Усиления глубины: ${result.reinforcements.depth} мм</li>
-            <li>Всего усилений: ${result.reinforcements.total} мм</li>
-        </ul>
-        <p><strong>Общая длина профиля:</strong> ${result.total_length} мм</p>
+        <div class="results-grid">
+            <div class="result-section">
+                <h4>Основные размеры:</h4>
+                <div>Основание: ${result.base_frame.mm} мм (${result.base_frame.m} м)</div>
+                <div>Ступени: ${result.steps_frames.total_mm} мм (${result.steps_frames.total_m} м)</div>
+                <div>Стойки: ${result.vertical_stands.mm} мм (${result.vertical_stands.m} м)</div>
+            </div>
+            <div class="result-section">
+                <h4>Усиления:</h4>
+                <div>Передние: ${result.reinforcements.front.mm} мм (${result.reinforcements.front.m} м)</div>
+                <div>Задние: ${result.reinforcements.back.mm} мм (${result.reinforcements.back.m} м)</div>
+                <div>Внутренние: ${result.reinforcements.internal.mm} мм (${result.reinforcements.internal.m} м)</div>
+                <div>Глубина: ${result.reinforcements.depth.mm} мм (${result.reinforcements.depth.m} м)</div>
+            </div>
+        </div>
+        <div class="total-section">
+            <h4>Общий метраж:</h4>
+            <div>Профиль 20x20: ${result.total_length.mm} мм (${result.total_length.m} м)</div>
+        </div>
     `;
 }
 

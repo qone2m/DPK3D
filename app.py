@@ -148,18 +148,31 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
         total_length = base_length + total_steps_length + vertical_stands_length + total_reinforcements
 
         return {
-            "base_frame": round(base_length),
-            "steps_frames": [round(length) for length in steps_frames],
-            "total_steps_frames": round(total_steps_length),
-            "vertical_stands": round(vertical_stands_length),
-            "reinforcements": {
-                "front": round(front_reinforcement * reinforcements_count),
-                "back": round(back_reinforcement * reinforcements_count),
-                "internal": round(total_internal_reinforcement * reinforcements_count),
-                "depth": round(depth_reinforcements),
-                "total": round(total_reinforcements)
+            "base_frame": {
+                "mm": round(base_length),
+                "m": round(base_length / 1000, 2)
             },
-            "total_length": round(total_length),
+            "steps_frames": {
+                "mm": [round(length) for length in steps_frames],
+                "m": [round(length / 1000, 2) for length in steps_frames],
+                "total_mm": round(total_steps_length),
+                "total_m": round(total_steps_length / 1000, 2)
+            },
+            "vertical_stands": {
+                "mm": round(vertical_stands_length),
+                "m": round(vertical_stands_length / 1000, 2)
+            },
+            "reinforcements": {
+                "front": {"mm": round(front_reinforcement * reinforcements_count), "m": round((front_reinforcement * reinforcements_count) / 1000, 2)},
+                "back": {"mm": round(back_reinforcement * reinforcements_count), "m": round((back_reinforcement * reinforcements_count) / 1000, 2)},
+                "internal": {"mm": round(total_internal_reinforcement * reinforcements_count), "m": round((total_internal_reinforcement * reinforcements_count) / 1000, 2)},
+                "depth": {"mm": round(depth_reinforcements), "m": round(depth_reinforcements / 1000, 2)},
+                "total": {"mm": round(total_reinforcements), "m": round(total_reinforcements / 1000, 2)}
+            },
+            "total_length": {
+                "mm": round(total_length),
+                "m": round(total_length / 1000, 2)
+            },
             "dimensions": {
                 "width": width,
                 "height": height,
