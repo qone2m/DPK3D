@@ -82,7 +82,19 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             materialButtons.forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
-            materialInput.value = this.getAttribute('data-value');
+            const materialValue = this.getAttribute('data-value');
+            materialInput.value = materialValue;
+            
+            // Устанавливаем значение подъема доски в зависимости от материала
+            const boardElevationInput = document.getElementById('board-elevation');
+            if (materialValue === 'ДПК') {
+                boardElevationInput.value = '10';  // 10мм для ДПК
+            } else if (materialValue === 'ДПК+1 ПВЛ') {
+                boardElevationInput.value = '10';  // 10мм для ДПК+1 ПВЛ (кроме первой ступени)
+            } else {
+                boardElevationInput.value = '0';   // 0мм для ПВЛ
+            }
+            
             // Вызываем событие change для активации валидации
             materialInput.dispatchEvent(new Event('change'));
         });
@@ -187,7 +199,7 @@ function createBolt() {
     return boltGroup;
 }
 
-function createDPKBoards(width, depth, stepHeight, stepZ) {
+function createDPKBoards(width, depth, stepHeight, stepZ, boardElevation = 0) {
     const boardGroup = new THREE.Group();
     const boardWidth = 150; // Стандартная ширина доски
     const boardHeight = 25;
@@ -203,7 +215,8 @@ function createDPKBoards(width, depth, stepHeight, stepZ) {
         const boardGeometry = new THREE.BoxGeometry(width, boardHeight, boardWidth);
         const board = new THREE.Mesh(boardGeometry, dpkMaterial);
         const zPosition = i * (boardWidth + gap) + boardWidth/2 - frontOffset;
-        board.position.set(0, boardHeight/2, zPosition);
+        // Добавляем смещение по высоте
+        board.position.set(0, boardHeight/2 + boardElevation, zPosition);
         boardGroup.add(board);
 
         // Добавляем болты для каждой доски
@@ -214,7 +227,8 @@ function createDPKBoards(width, depth, stepHeight, stepZ) {
 
         boltPositions.forEach(pos => {
             const bolt = createBolt();
-            bolt.position.set(pos.x, stepHeight + boardHeight + 1, pos.z + stepZ);
+            // Поднимаем болты вместе с доской
+            bolt.position.set(pos.x, stepHeight + boardHeight + boardElevation + 1, pos.z + stepZ);
             boltsGroup.add(bolt);
         });
     }
@@ -224,7 +238,8 @@ function createDPKBoards(width, depth, stepHeight, stepZ) {
         const lastBoardGeometry = new THREE.BoxGeometry(width, boardHeight, remainingSpace);
         const lastBoard = new THREE.Mesh(lastBoardGeometry, dpkMaterial);
         const zPosition = numFullBoards * (boardWidth + gap) + remainingSpace/2 - frontOffset;
-        lastBoard.position.set(0, boardHeight/2, zPosition);
+        // Добавляем смещение по высоте для последней доски
+        lastBoard.position.set(0, boardHeight/2 + boardElevation, zPosition);
         boardGroup.add(lastBoard);
 
         // Болты для последней доски
@@ -235,7 +250,8 @@ function createDPKBoards(width, depth, stepHeight, stepZ) {
 
         boltPositions.forEach(pos => {
             const bolt = createBolt();
-            bolt.position.set(pos.x, stepHeight + boardHeight + 1, pos.z + stepZ);
+            // Поднимаем болты вместе с последней доской
+            bolt.position.set(pos.x, stepHeight + boardHeight + boardElevation + 1, pos.z + stepZ);
             boltsGroup.add(bolt);
         });
     }
@@ -245,8 +261,8 @@ function createDPKBoards(width, depth, stepHeight, stepZ) {
     return boardGroup;
 }
 
-function createDPKPlatform(width, depth, stepHeight, stepZ) {
-    return createDPKBoards(width, depth, stepHeight, stepZ);
+function createDPKPlatform(width, depth, stepHeight, stepZ, boardElevation = 0) {
+    return createDPKBoards(width, depth, stepHeight, stepZ, boardElevation);
 }
 
 function createPVLCover(width, depth) {
@@ -320,7 +336,7 @@ function createStairModel(dimensions) {
     coveringsGroup = new THREE.Group();
     boltsGroup = new THREE.Group();
 
-    const {width, height, step_height, step_depth, profile_thickness, has_platform, platform_depth, reinforcements_count, material} = dimensions;
+    const {width, height, step_height, step_depth, profile_thickness, has_platform, platform_depth, reinforcements_count, material, board_elevation} = dimensions;
     const steps = Math.round(height / step_height);
 
     // Определяем необходимость горизонтальных усилений для каждой ступени
@@ -535,11 +551,11 @@ function createStairModel(dimensions) {
 
         if (material === "ДПК" || (material === "ДПК+1 ПВЛ" && i > 0)) {
             if (isLastStep && has_platform) {
-                const platformBoards = createDPKPlatform(width, currentStepDepth, stepPosition.y, stepPosition.z);
+                const platformBoards = createDPKPlatform(width, currentStepDepth, stepPosition.y, stepPosition.z, board_elevation);
                 platformBoards.position.set(stepPosition.x, stepPosition.y, stepPosition.z);
                 coveringsGroup.add(platformBoards);
             } else {
-                const dpkBoards = createDPKBoards(width, currentStepDepth, stepPosition.y, stepPosition.z);
+                const dpkBoards = createDPKBoards(width, currentStepDepth, stepPosition.y, stepPosition.z, board_elevation);
                 dpkBoards.position.set(stepPosition.x, stepPosition.y, stepPosition.z);
                 coveringsGroup.add(dpkBoards);
             }
@@ -617,7 +633,8 @@ document.getElementById('calculator-form').addEventListener('submit', async func
         material: document.getElementById('material').value || 'ДПК', // Добавляем значение по умолчанию
         has_platform: document.getElementById('has-platform').checked,
         platform_depth: parseFloat(document.getElementById('platform-depth').value || 0),
-        reinforcements_count: parseInt(document.getElementById('reinforcements-count').value || 1)
+        reinforcements_count: parseInt(document.getElementById('reinforcements-count').value || 1),
+        board_elevation: parseFloat(document.getElementById('board-elevation').value || 0)
     };
     
     try {

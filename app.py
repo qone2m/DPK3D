@@ -55,17 +55,21 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
         if material == "ДПК":
             frame_height = height - app.config['DPK_REDUCTION']  # 170 - 25 = 145 мм
             step_frame_height = step_height - app.config['DPK_REDUCTION']  # для 2 ступеней: 85 - 25 = 60 мм
+            board_elevation = 10  # Подъем доски на 10мм для ДПК
         elif material == "ДПК+1 ПВЛ":
             if steps == 1:
                 frame_height = height  # Для одной ступени используем ПВЛ
                 step_frame_height = step_height
+                board_elevation = 0
             else:
                 # Для первой ступени - полная высота (ПВЛ), для остальных - уменьшенная (ДПК)
                 frame_height = height - (app.config['DPK_REDUCTION'] * (steps - 1) / steps)
                 step_frame_height = step_height - app.config['DPK_REDUCTION']
+                board_elevation = 10  # Подъем доски на 10мм для ДПК ступеней (кроме первой)
         else:
             frame_height = height
             step_frame_height = step_height
+            board_elevation = 0
 
         # 1. Основание (прямоугольник)
         # Основание = 2*ширина + (2*глубина*количество_ступеней - 4*толщина профиля)
@@ -167,13 +171,13 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
                 "has_platform": has_platform,
                 "platform_depth": platform_depth,
                 "reinforcements_count": reinforcements_count,
-                "material": material
+                "material": material,
+                "board_elevation": board_elevation  # Добавляем информацию о подъеме доски
             }
         }
     except ValueError as e:
         app.logger.error(f"Ошибка валидации: {e}")
         return None
-
 @app.route('/')
 def index():
     return render_template('index.html')
