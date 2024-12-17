@@ -154,13 +154,24 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
         strip_perimeter = (strip_width * 2 + strip_thickness * 2)  # периметр в разрезе
         strip_paint_area = (strip_perimeter * strip_length * strips_count) / 1000000  # площадь в м²
         
-        # Добавляем площадь полосок к общей площади покраски
-        total_paint_area = 0
-        # Расчет площади покраски (периметр профиля * длина)
+        # Расчет площади покраски каркаса
         profile_perimeter = 20 * 4  # 20мм - сторона профиля, 4 стороны
-        total_paint_area = (profile_perimeter * (base_length + total_steps_length + vertical_stands_length + total_reinforcements)) / 1000000  # Площадь в м²
-        total_paint_area += strip_paint_area
-        paint_weight = total_paint_area * paint_consumption  # Вес краски в граммах
+        frame_paint_area = (profile_perimeter * (base_length + total_steps_length + vertical_stands_length + total_reinforcements)) / 1000000  # Площадь в м²
+        frame_paint_area += strip_paint_area  # Добавляем площадь полосок
+
+        # Расчет площади покраски ПВЛ (если используется)
+        pvl_paint_area = 0
+        if material in ["ПВЛ", "ДПК+1 ПВЛ"]:
+            if material == "ПВЛ":
+                pvl_paint_area = (width * pvl_depth * steps / 1000000) * 2  # Учитываем обе стороны ПВЛ
+            else:  # ДПК+1 ПВЛ
+                pvl_paint_area = (width * pvl_depth / 1000000) * 2  # Только первая ступень, обе стороны
+
+        # Общая площадь покраски и вес краски
+        total_paint_area = frame_paint_area + pvl_paint_area
+        frame_paint_weight = frame_paint_area * paint_consumption
+        pvl_paint_weight = pvl_paint_area * paint_consumption
+        total_paint_weight = frame_paint_weight + pvl_paint_weight
 
         # Расчет метража доски ДПК (если используется)
         dpk_length = 0
@@ -174,14 +185,6 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
             else:  # ДПК+1 ПВЛ
                 dpk_boards_count = boards_per_step * (steps - 1)  # Первая ступень ПВЛ
                 dpk_length = width * (steps - 1) * boards_per_step  # Общая длина в мм
-
-        # Расчет площади покрытия ПВЛ (если используется)
-        pvl_area = 0
-        if material in ["ПВЛ", "ДПК+1 ПВЛ"]:
-            if material == "ПВЛ":
-                pvl_area = width * pvl_depth * steps / 1000000  # Площадь в м²
-            else:  # ДПК+1 ПВЛ
-                pvl_area = width * pvl_depth / 1000000  # Только первая ступень
 
         # Расчет количества болтов и гаек (4 болта и 4 гайки на ступень)
         bolts_per_step = 4  # 4 болта на ступень (2 доски * 2 болта)
@@ -220,7 +223,6 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
             "additional_materials": {
                 "dpk_length": round(dpk_length / 1000, 2),  # Метраж в метрах
                 "dpk_boards": dpk_boards_count,  # Количество досок
-                "pvl_area": round(pvl_area, 2),  # Площадь в м²
                 "bolts_count": bolts_count,
                 "nuts_count": nuts_count,
                 "mounting_strips": {
@@ -230,9 +232,13 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
                 }
             },
             "paint": {
-                "area": round(total_paint_area, 2),  # Площадь покраски в м²
-                "weight": round(paint_weight, 2),    # Вес краски в граммах
-                "consumption": paint_consumption      # Расход г/м²
+                "frame_area": round(frame_paint_area, 2),    # Площадь покраски каркаса в м²
+                "frame_weight": round(frame_paint_weight, 2), # Вес краски для каркаса в граммах
+                "pvl_area": round(pvl_paint_area, 2),        # Площадь покраски ПВЛ в м²
+                "pvl_weight": round(pvl_paint_weight, 2),    # Вес краски для ПВЛ в граммах
+                "total_area": round(total_paint_area, 2),    # Общая площадь покраски в м²
+                "total_weight": round(total_paint_weight, 2), # Общий вес краски в граммах
+                "consumption": paint_consumption              # Расход г/м²
             },
             "dimensions": {
                 "width": width,
