@@ -147,6 +147,35 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
         # Итоговая полезная длина всего профиля
         total_length = base_length + total_steps_length + vertical_stands_length + total_reinforcements
 
+        # Расчет метража доски ДПК (если используется)
+        dpk_length = 0
+        dpk_boards_count = 0
+        if material in ["ДПК", "ДПК+1 ПВЛ"]:
+            # На каждую ступень идет 2 доски
+            boards_per_step = 2  # Всегда 2 доски на ступень
+            if material == "ДПК":
+                dpk_boards_count = boards_per_step * steps
+                dpk_length = width * steps * boards_per_step  # Общая длина в мм (ширина * кол-во ступеней * 2 доски)
+            else:  # ДПК+1 ПВЛ
+                dpk_boards_count = boards_per_step * (steps - 1)  # Первая ступень ПВЛ
+                dpk_length = width * (steps - 1) * boards_per_step  # Общая длина в мм
+
+        # Расчет площади покрытия ПВЛ (если используется)
+        pvl_area = 0
+        if material in ["ПВЛ", "ДПК+1 ПВЛ"]:
+            if material == "ПВЛ":
+                pvl_area = width * pvl_depth * steps / 1000000  # Площадь в м²
+            else:  # ДПК+1 ПВЛ
+                pvl_area = width * pvl_depth / 1000000  # Только первая ступень
+
+        # Расчет количества болтов и гаек (4 болта и 4 гайки на ступень)
+        bolts_per_step = 4  # 4 болта на ступень (2 доски * 2 болта)
+        if material == "ДПК":
+            bolts_count = bolts_per_step * steps
+        else:  # ДПК+1 ПВЛ
+            bolts_count = bolts_per_step * (steps - 1)
+        nuts_count = bolts_count  # Количество гаек равно количеству болтов
+
         return {
             "base_frame": {
                 "mm": round(base_length),
@@ -172,6 +201,13 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
             "total_length": {
                 "mm": round(total_length),
                 "m": round(total_length / 1000, 2)
+            },
+            "additional_materials": {
+                "dpk_length": round(dpk_length / 1000, 2),  # Метраж в метрах
+                "dpk_boards": dpk_boards_count,  # Количество досок
+                "pvl_area": round(pvl_area, 2),  # Площадь в м²
+                "bolts_count": bolts_count,
+                "nuts_count": nuts_count
             },
             "dimensions": {
                 "width": width,

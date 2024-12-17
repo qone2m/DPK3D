@@ -605,10 +605,19 @@ function updateResults(result) {
             <h4>Общий метраж:</h4>
             <div>Профиль 20x20: ${result.total_length.mm} мм (${result.total_length.m} м)</div>
         </div>
+        <div class="additional-materials">
+            <h4>Дополнительные материалы:</h4>
+            ${result.additional_materials.dpk_length > 0 ? `
+                <div>Доска ДПК: ${result.additional_materials.dpk_length} м (${result.additional_materials.dpk_boards} шт)</div>
+                <div>Болты: ${result.additional_materials.bolts_count} шт</div>
+                <div>Гайки: ${result.additional_materials.nuts_count} шт</div>
+            ` : ''}
+            ${result.additional_materials.pvl_area > 0 ? `<div>Площадь ПВЛ: ${result.additional_materials.pvl_area} м²</div>` : ''}
+        </div>
     `;
 }
 
-// Функция обновления 3D модели
+// Обновляем функцию изменения 3D модели
 function updateStairsModel(dimensions) {
     // Очищаем существующую модель
     while(stairModel.children.length > 0) {
