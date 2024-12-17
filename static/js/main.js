@@ -336,7 +336,7 @@ function createStairModel(dimensions) {
     coveringsGroup = new THREE.Group();
     boltsGroup = new THREE.Group();
 
-    const {width, height, step_height, step_depth, profile_thickness, has_platform, platform_depth, reinforcements_count, material, board_elevation} = dimensions;
+    const {width, height, step_height, step_depth, profile_thickness, has_platform, platform_depth, reinforcements_count, material, board_elevation, paint_consumption} = dimensions;
     const steps = Math.round(height / step_height);
 
     // Определяем необходимость горизонтальных усилений для каждой ступени
@@ -613,6 +613,8 @@ function updateResults(result) {
                 <div>Гайки: ${result.additional_materials.nuts_count} шт</div>
             ` : ''}
             ${result.additional_materials.pvl_area > 0 ? `<div>Площадь ПВЛ: ${result.additional_materials.pvl_area} м²</div>` : ''}
+            <div>Площадь покраски: ${result.paint.area} м²</div>
+            <div>Краска: ${result.paint.weight} г (при расходе ${result.paint.consumption} г/м²)</div>
         </div>
     `;
 }
@@ -650,7 +652,8 @@ document.getElementById('calculator-form').addEventListener('submit', async func
         has_platform: document.getElementById('has-platform').checked,
         platform_depth: parseFloat(document.getElementById('platform-depth').value || 0),
         reinforcements_count: parseInt(document.getElementById('reinforcements-count').value || 1),
-        board_elevation: parseFloat(document.getElementById('board-elevation').value || 0)
+        board_elevation: parseFloat(document.getElementById('board-elevation').value || 0),
+        paint_consumption: parseFloat(document.getElementById('paint-consumption').value)
     };
     
     try {

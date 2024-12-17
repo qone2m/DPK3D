@@ -176,8 +176,13 @@
                     </div>
                 </div>
                 <div class="mb-3 hidden" id="reinforcements-count-container">
-                    <label for="reinforcements-count" class="form-label">Количество стоек усиления</label>
-                    <input type="number" class="form-control" id="reinforcements-count" min="1" value="1">
+                    <label for="reinforcements-count" class="form-label">Количество усилений</label>
+                    <input type="number" class="form-control" id="reinforcements-count" value="1" min="1" max="2">
+                </div>
+                <div class="mb-3">
+                    <label for="paint-consumption" class="form-label">Расход краски (г/м²)</label>
+                    <input type="number" class="form-control" id="paint-consumption" value="110" min="0" step="1">
+                    <small class="form-text text-muted">Стандартное значение: 110 г/м²</small>
                 </div>
                 <div class="mb-3">
                     <div class="form-check">

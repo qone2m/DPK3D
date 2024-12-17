@@ -28,7 +28,7 @@ def validate_input(width, height, steps):
     if not app.config['MIN_HEIGHT'] <= height <= app.config['MAX_HEIGHT']:
         raise ValueError(f"Высота должна быть от {app.config['MIN_HEIGHT']} до {app.config['MAX_HEIGHT']} мм")
 
-def calculate_metal(width, height, steps, material, has_platform, platform_depth=0, reinforcements_count=1):
+def calculate_metal(width, height, steps, material, has_platform, platform_depth=0, reinforcements_count=1, paint_consumption=110):
     try:
         validate_input(width, height, steps)
         
@@ -147,6 +147,11 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
         # Итоговая полезная длина всего профиля
         total_length = base_length + total_steps_length + vertical_stands_length + total_reinforcements
 
+        # Расчет площади покраски (периметр профиля * длина)
+        profile_perimeter = 20 * 4  # 20мм - сторона профиля, 4 стороны
+        total_paint_area = (profile_perimeter * total_length) / 1000000  # Площадь в м²
+        paint_weight = total_paint_area * paint_consumption  # Вес краски в граммах
+
         # Расчет метража доски ДПК (если используется)
         dpk_length = 0
         dpk_boards_count = 0
@@ -209,6 +214,11 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
                 "bolts_count": bolts_count,
                 "nuts_count": nuts_count
             },
+            "paint": {
+                "area": round(total_paint_area, 2),  # Площадь покраски в м²
+                "weight": round(paint_weight, 2),    # Вес краски в граммах
+                "consumption": paint_consumption      # Расход г/м²
+            },
             "dimensions": {
                 "width": width,
                 "height": height,
@@ -227,6 +237,7 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
     except ValueError as e:
         app.logger.error(f"Ошибка валидации: {e}")
         return None
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -242,8 +253,9 @@ def calculate():
         has_platform = data['has_platform']
         platform_depth = float(data['platform_depth']) if has_platform else 0
         reinforcements_count = int(data.get('reinforcements_count', 1))
+        paint_consumption = float(data.get('paint_consumption', 110))  # г/м²
 
-        result = calculate_metal(width, height, steps, material, has_platform, platform_depth, reinforcements_count)
+        result = calculate_metal(width, height, steps, material, has_platform, platform_depth, reinforcements_count, paint_consumption)
         if result is None:
             return jsonify({"error": "Неверный материал"}), 400
 
