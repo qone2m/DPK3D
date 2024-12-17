@@ -4,6 +4,13 @@ const MAX_WIDTH = 2000; // мм
 const MIN_HEIGHT = 100; // мм
 const MAX_HEIGHT = 3000; // мм
 
+// Константы для цветов
+const COLOR_MAPPING = {
+    'RAL9005': { frame: 0x000000, dpk: 0x382B22 }, // Черный - Венге
+    'RAL8017': { frame: 0x44322D, dpk: 0x8B4513 }, // Коричневый - Коричневый
+    'RAL7024': { frame: 0x474A51, dpk: 0x808080 }  // Серый - Серый
+};
+
 // Функция валидации формы
 function validateForm() {
     const width = parseFloat(document.getElementById('width').value);
@@ -99,7 +106,45 @@ document.addEventListener('DOMContentLoaded', function() {
             materialInput.dispatchEvent(new Event('change'));
         });
     });
+
+    // Обработчики для цветов каркаса
+    document.querySelectorAll('input[name="frame-color"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            document.getElementById('frame-color').value = this.value;
+            updateMaterialColors();
+        });
+    });
 });
+
+// Функция обновления цветов материалов
+function updateMaterialColors() {
+    const frameColor = document.getElementById('frame-color').value;
+    const colors = COLOR_MAPPING[frameColor];
+    
+    // Обновляем цвет каркаса
+    stairModel.traverse((child) => {
+        if (child.isMesh && child.material && !child.userData.isDPK && !child.userData.isBolt) {
+            child.material.color.setHex(colors.frame);
+        }
+    });
+
+    // Обновляем цвет ДПК
+    coveringsGroup.traverse((child) => {
+        if (child.isMesh && child.material && child.userData.isDPK) {
+            child.material.color.setHex(colors.dpk);
+        }
+    });
+
+    // Если материал ПВЛ, красим его в цвет каркаса
+    const material = document.getElementById('material').value;
+    if (material === 'ПВЛ' || material === 'ДПК+1 ПВЛ') {
+        coveringsGroup.traverse((child) => {
+            if (child.isMesh && child.material && child.userData.isPVL) {
+                child.material.color.setHex(colors.frame);
+            }
+        });
+    }
+}
 
 // Инициализация Three.js
 function init() {
@@ -200,6 +245,14 @@ function createBolt() {
 }
 
 function createDPKBoards(width, depth, stepHeight, stepZ, boardElevation = 0) {
+    const frameColor = document.getElementById('frame-color').value;
+    const colors = COLOR_MAPPING[frameColor];
+    
+    const dpkMaterial = new THREE.MeshPhongMaterial({
+        color: colors.dpk,
+        flatShading: true
+    });
+
     const boardGroup = new THREE.Group();
     const boardWidth = 150; // Стандартная ширина доски
     const boardHeight = 25;
@@ -266,6 +319,14 @@ function createDPKPlatform(width, depth, stepHeight, stepZ, boardElevation = 0) 
 }
 
 function createPVLCover(width, depth) {
+    const frameColor = document.getElementById('frame-color').value;
+    const colors = COLOR_MAPPING[frameColor];
+    
+    const pvlMaterial = new THREE.MeshPhongMaterial({
+        color: colors.frame,
+        flatShading: true
+    });
+
     const pvlGroup = new THREE.Group();
     const gridSize = 30; // Размер ячейки сетки
 
@@ -330,6 +391,9 @@ function updateVisibility() {
 }
 
 function createStairModel(dimensions) {
+    const frameColor = document.getElementById('frame-color').value;
+    const colors = COLOR_MAPPING[frameColor];
+    
     // Очищаем группы перед созданием новой модели
     scene.remove(stairModel);
     stairModel = new THREE.Group();
@@ -350,7 +414,7 @@ function createStairModel(dimensions) {
 
     // Материал для профиля 20х20
     const frameMaterial = new THREE.MeshPhongMaterial({
-        color: 0x404040,
+        color: colors.frame,
         opacity: 1,
         transparent: false
     });
@@ -581,46 +645,67 @@ function createStairModel(dimensions) {
 
 // Обновляем функцию изменения результатов
 function updateResults(result) {
-    const resultDiv = document.getElementById('result');
     const resultDetails = document.getElementById('result-details');
-    resultDiv.classList.remove('hidden');
+    const resultBox = document.getElementById('result');
     
-    resultDetails.innerHTML = `
-        <div class="results-grid">
-            <div class="result-section">
-                <h4>Основные размеры:</h4>
-                <div>Основание: ${result.base_frame.mm} мм (${result.base_frame.m} м)</div>
-                <div>Ступени: ${result.steps_frames.total_mm} мм (${result.steps_frames.total_m} м)</div>
-                <div>Стойки: ${result.vertical_stands.mm} мм (${result.vertical_stands.m} м)</div>
-            </div>
-            <div class="result-section">
-                <h4>Усиления:</h4>
-                <div>Передние: ${result.reinforcements.front.mm} мм (${result.reinforcements.front.m} м)</div>
-                <div>Задние: ${result.reinforcements.back.mm} мм (${result.reinforcements.back.m} м)</div>
-                <div>Внутренние: ${result.reinforcements.internal.mm} мм (${result.reinforcements.internal.m} м)</div>
-                <div>Глубина: ${result.reinforcements.depth.mm} мм (${result.reinforcements.depth.m} м)</div>
-            </div>
+    if (result.error) {
+        resultDetails.innerHTML = `<div class="alert alert-danger">${result.error}</div>`;
+        resultBox.classList.remove('hidden');
+        return;
+    }
+
+    let html = `
+        <div class="mb-3">
+            <h5>Параметры:</h5>
+            <ul>
+                <li>Материал: ${result.dimensions.material}</li>
+                <li>Цвет каркаса: ${result.dimensions.frame_color}</li>`;
+    
+    if (result.dimensions.material === 'ДПК' || result.dimensions.material === 'ДПК+1 ПВЛ') {
+        if (result.additional_materials.dpk_color) {
+            html += `<li>Цвет доски ДПК: ${result.additional_materials.dpk_color}</li>`;
+        }
+    }
+    
+    html += `
+                <li>Ширина: ${result.dimensions.width} мм</li>
+                <li>Высота: ${result.dimensions.height} мм</li>
+                <li>Количество ступеней: ${Math.round(result.dimensions.height / result.dimensions.step_height)}</li>
+            </ul>
         </div>
-        <div class="total-section">
-            <h4>Общий метраж:</h4>
-            <div>Профиль 20x20: ${result.total_length.mm} мм (${result.total_length.m} м)</div>
-        </div>
-        <div class="additional-materials">
-            <h4>Дополнительные материалы:</h4>
-            ${result.additional_materials.dpk_length > 0 ? `
-                <div>Доска ДПК: ${result.additional_materials.dpk_length} м (${result.additional_materials.dpk_boards} шт)</div>
-                <div>Болты: ${result.additional_materials.bolts_count} шт</div>
-                <div>Гайки: ${result.additional_materials.nuts_count} шт</div>
-            ` : ''}
-            ${result.additional_materials.pvl_area > 0 ? `<div>Площадь ПВЛ: ${result.additional_materials.pvl_area} м²</div>` : ''}
-            <div>Полоса 40мм: ${result.additional_materials.mounting_strips.total_length}мм (${result.additional_materials.mounting_strips.total_length/1000}м)</div>
-            <h4>Расчет краски:</h4>
-            <div>Площадь покраски каркаса: ${result.paint.frame_area} м² (${result.paint.frame_weight} г)</div>
-            ${result.paint.pvl_area > 0 ? `<div>Площадь покраски ПВЛ: ${result.paint.pvl_area} м² (${result.paint.pvl_weight} г)</div>` : ''}
-            <div>Общая площадь покраски: ${result.paint.total_area} м²</div>
-            <div>Общий расход краски: ${result.paint.total_weight} г (при расходе ${result.paint.consumption} г/м²)</div>
-        </div>
-    `;
+        
+        <div class="mb-3">
+            <h5>Металлический каркас:</h5>
+            <ul>
+                <li>Общая длина профиля: ${result.total_length.mm} мм (${result.total_length.m} м)</li>
+                <li>Площадь покраски: ${result.paint.total_area} м²</li>
+                <li>Вес краски: ${result.paint.total_weight} г</li>
+            </ul>
+        </div>`;
+    
+    if (result.additional_materials) {
+        html += `
+        <div class="mb-3">
+            <h5>Дополнительные материалы:</h5>
+            <ul>`;
+        
+        if (result.additional_materials.dpk_length) {
+            html += `<li>Общая длина досок ДПК: ${result.additional_materials.dpk_length} м</li>`;
+        }
+        if (result.additional_materials.dpk_boards) {
+            html += `<li>Количество досок ДПК: ${result.additional_materials.dpk_boards} шт</li>`;
+        }
+        if (result.additional_materials.bolts_count) {
+            html += `
+                <li>Количество болтов: ${result.additional_materials.bolts_count} шт</li>
+                <li>Количество гаек: ${result.additional_materials.nuts_count} шт</li>`;
+        }
+        
+        html += `</ul></div>`;
+    }
+    
+    resultDetails.innerHTML = html;
+    resultBox.classList.remove('hidden');
 }
 
 // Обновляем функцию изменения 3D модели
@@ -652,12 +737,12 @@ document.getElementById('calculator-form').addEventListener('submit', async func
         width: parseFloat(document.getElementById('width').value),
         height: parseFloat(document.getElementById('height').value),
         steps: parseInt(document.getElementById('steps').value),
-        material: document.getElementById('material').value || 'ДПК', // Добавляем значение по умолчанию
+        material: document.getElementById('material').value,
         has_platform: document.getElementById('has-platform').checked,
-        platform_depth: parseFloat(document.getElementById('platform-depth').value || 0),
-        reinforcements_count: parseInt(document.getElementById('reinforcements-count').value || 1),
-        board_elevation: parseFloat(document.getElementById('board-elevation').value || 0),
-        paint_consumption: parseFloat(document.getElementById('paint-consumption').value)
+        platform_depth: document.getElementById('has-platform').checked ? parseFloat(document.getElementById('platform-depth').value) : 0,
+        reinforcements_count: document.getElementById('custom-reinforcements').checked ? parseInt(document.getElementById('reinforcements-count').value) : 1,
+        paint_consumption: parseFloat(document.getElementById('paint-consumption').value),
+        frame_color: document.getElementById('frame-color').value
     };
     
     try {

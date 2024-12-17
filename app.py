@@ -28,7 +28,7 @@ def validate_input(width, height, steps):
     if not app.config['MIN_HEIGHT'] <= height <= app.config['MAX_HEIGHT']:
         raise ValueError(f"Высота должна быть от {app.config['MIN_HEIGHT']} до {app.config['MAX_HEIGHT']} мм")
 
-def calculate_metal(width, height, steps, material, has_platform, platform_depth=0, reinforcements_count=1, paint_consumption=110):
+def calculate_metal(width, height, steps, material, has_platform, platform_depth=0, reinforcements_count=1, paint_consumption=110, frame_color='RAL9005'):
     try:
         validate_input(width, height, steps)
         
@@ -186,6 +186,14 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
                 dpk_boards_count = boards_per_step * (steps - 1)  # Первая ступень ПВЛ
                 dpk_length = width * (steps - 1) * boards_per_step  # Общая длина в мм
 
+        # Определяем цвет доски ДПК в зависимости от цвета каркаса
+        dpk_color_mapping = {
+            'RAL9005': 'Венге',
+            'RAL8017': 'Коричневый',
+            'RAL7024': 'Серый'
+        }
+        dpk_color = dpk_color_mapping.get(frame_color, 'Венге')  # По умолчанию Венге
+
         # Расчет количества болтов и гаек (4 болта и 4 гайки на ступень)
         bolts_per_step = 4  # 4 болта на ступень (2 доски * 2 болта)
         if material == "ДПК":
@@ -221,8 +229,9 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
                 "m": round((base_length + total_steps_length + vertical_stands_length + total_reinforcements + strip_length * strips_count) / 1000, 2)
             },
             "additional_materials": {
-                "dpk_length": round(dpk_length / 1000, 2),  # Метраж в метрах
-                "dpk_boards": dpk_boards_count,  # Количество досок
+                "dpk_length": round(dpk_length / 1000, 2),
+                "dpk_boards": dpk_boards_count,
+                "dpk_color": dpk_color if material in ["ДПК", "ДПК+1 ПВЛ"] else None,
                 "bolts_count": bolts_count,
                 "nuts_count": nuts_count,
                 "mounting_strips": {
@@ -232,13 +241,13 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
                 }
             },
             "paint": {
-                "frame_area": round(frame_paint_area, 2),    # Площадь покраски каркаса в м²
-                "frame_weight": round(frame_paint_weight, 2), # Вес краски для каркаса в граммах
-                "pvl_area": round(pvl_paint_area, 2),        # Площадь покраски ПВЛ в м²
-                "pvl_weight": round(pvl_paint_weight, 2),    # Вес краски для ПВЛ в граммах
-                "total_area": round(total_paint_area, 2),    # Общая площадь покраски в м²
-                "total_weight": round(total_paint_weight, 2), # Общий вес краски в граммах
-                "consumption": paint_consumption              # Расход г/м²
+                "frame_area": round(frame_paint_area, 2),
+                "frame_weight": round(frame_paint_weight, 2),
+                "pvl_area": round(pvl_paint_area, 2),
+                "pvl_weight": round(pvl_paint_weight, 2),
+                "total_area": round(total_paint_area, 2),
+                "total_weight": round(total_paint_weight, 2),
+                "consumption": paint_consumption
             },
             "dimensions": {
                 "width": width,
@@ -252,7 +261,8 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
                 "platform_depth": platform_depth,
                 "reinforcements_count": reinforcements_count,
                 "material": material,
-                "board_elevation": board_elevation  # Добавляем информацию о подъеме доски
+                "board_elevation": board_elevation,
+                "frame_color": frame_color
             }
         }
     except ValueError as e:
@@ -275,8 +285,9 @@ def calculate():
         platform_depth = float(data['platform_depth']) if has_platform else 0
         reinforcements_count = int(data.get('reinforcements_count', 1))
         paint_consumption = float(data.get('paint_consumption', 110))  # г/м²
+        frame_color = data.get('frame_color', 'RAL9005')
 
-        result = calculate_metal(width, height, steps, material, has_platform, platform_depth, reinforcements_count, paint_consumption)
+        result = calculate_metal(width, height, steps, material, has_platform, platform_depth, reinforcements_count, paint_consumption, frame_color)
         if result is None:
             return jsonify({"error": "Неверный материал"}), 400
 
