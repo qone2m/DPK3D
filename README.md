@@ -21,10 +21,10 @@
 
 ## Технические требования
 
-- Python 3.8+
-- Flask 2.0.1
-- Three.js r128
-- Современный веб-браузер с поддержкой WebGL
+- Python 3.8+ (рекомендуется последняя версия Python 3.10+)
+- Flask 2.0.1 или выше
+- Three.js r128 или выше
+- Современный веб-браузер с поддержкой WebGL (например, Google Chrome, Firefox)
 
 ## Установка
 
@@ -50,20 +50,28 @@ pip install -r requirements.txt
 
 ### Разработка
 
+Запустите приложение в режиме разработки:
 ```bash
 python app.py
 ```
 
-Приложение будет доступно по адресу: http://localhost:5000
+Приложение будет доступно по адресу: [http://localhost:5000](http://localhost:5000)
 
 ### Тестирование
 
+Запустите тесты:
 ```bash
-python -m unittest discover tests
+pytest
+```
+
+Или с измерением покрытия кода:
+```bash
+pytest --cov=.
 ```
 
 ### Продакшн
 
+Запустите приложение с Gunicorn:
 ```bash
 gunicorn -w 4 -b 0.0.0.0:5000 app:app
 ```
@@ -73,12 +81,12 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 Настройки приложения находятся в файле `config.py`:
 
 ### Ограничения размеров
-- MIN_WIDTH = 600 мм
-- MAX_WIDTH = 2000 мм
+- MIN_WIDTH = 300 мм
+- MAX_WIDTH = 6000 мм
 - MIN_HEIGHT = 100 мм (для одной ступени)
-- MAX_HEIGHT = 3000 мм
-- MIN_STEP_HEIGHT = 150 мм
-- MAX_STEP_HEIGHT = 200 мм
+- MAX_HEIGHT = 3400 мм
+- MIN_STEP_HEIGHT = 110 мм
+- MAX_STEP_HEIGHT = 300 мм
 
 ### Размеры материалов
 - PROFILE_THICKNESS = 20 мм
@@ -115,6 +123,14 @@ DPK_Sebestoimost/
 3. Реализовать проверку прочности
 4. Добавить экспорт в PDF
 5. Добавить сохранение проектов
+6. Добавить поддержку дополнительных материалов
+7. Улучшить 3D визуализацию (например, добавить текстуры)
+
+## Полезные ресурсы
+
+- [Документация Flask](https://flask.palletsprojects.com/)
+- [Документация Three.js](https://threejs.org/docs/)
+- [Документация Gunicorn](https://docs.gunicorn.org/)
 
 ## Лицензия
 

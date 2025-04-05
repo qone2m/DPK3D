@@ -1,71 +1,100 @@
-from flask import Flask, request, jsonify, render_template
-from flask_cors import CORS
-import logging
-from logging.handlers import RotatingFileHandler
-import os
-from config import get_config
+from flask import Flask, request, jsonify, render_template  # Импортируем Flask для создания веб-приложения
+from flask_cors import CORS  # Импортируем CORS для управления доступом из других доменов
+import logging  # Импортируем модуль для логирования (записи событий)
+from logging.handlers import RotatingFileHandler  # Для создания логов с ограниченным размером
+import os  # Для работы с файловой системой
+from config import get_config  # Импортируем настройки приложения из файла config.py
 
+# Определяем базовую директорию, где находится текущий файл
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Указываем папку, где будут храниться HTML-шаблоны
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 
 def create_app():
-    app = Flask(__name__, template_folder=TEMPLATE_DIR)  # Явно указываем папку шаблонов
-    app.config.from_object(get_config())
+    # Создаем экземпляр приложения Flask
+    app = Flask(__name__, template_folder=TEMPLATE_DIR)  # Указываем папку с шаблонами
+    app.config.from_object(get_config())  # Загружаем настройки из config.py
     
-    # Настройка логирования
-    if not os.path.exists('logs'):
-        os.makedirs('logs')
+    # Настраиваем логирование (запись событий в файл)
+    if not os.path.exists('logs'):  # Если папка для логов не существует
+        os.makedirs('logs')  # Создаем папку для логов
     
+    # Создаем обработчик логов, который будет записывать их в файл
     file_handler = RotatingFileHandler(
-        'logs/app.log',
-        maxBytes=10240,
-        backupCount=10
+        'logs/app.log',  # Имя файла для логов
+        maxBytes=10240,  # Максимальный размер файла логов (10 КБ)
+        backupCount=10  # Количество резервных копий логов
     )
+    # Форматируем логи: время, уровень, сообщение, путь к файлу и номер строки
     file_handler.setFormatter(logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'  # Исправлен формат строки
     ))
-    file_handler.setLevel(logging.INFO)
-    app.logger.addHandler(file_handler)
-    app.logger.setLevel(logging.INFO)
+    file_handler.setLevel(logging.INFO)  # Устанавливаем уровень логирования (информационные сообщения)
+    app.logger.addHandler(file_handler)  # Добавляем обработчик логов в приложение
+    app.logger.setLevel(logging.INFO)  # Устанавливаем общий уровень логирования
     
-    # Настройка CORS
-    if app.config.get('ENABLE_CORS', False):
+    # Логирование запросов (запись информации о каждом запросе)
+    @app.before_request
+    def log_request_info():
+        # Логируем метод запроса (GET, POST и т.д.), URL и данные запроса
+        if request.is_json:
+            app.logger.info(f"Получен запрос: {request.method} {request.url} с данными {request.json}")
+        else:
+            app.logger.info(f"Получен запрос: {request.method} {request.url} без JSON данных")
+
+    # Глобальная обработка ошибок (если что-то пошло не так)
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        # Логируем ошибку и возвращаем пользователю сообщение об ошибке
+        app.logger.error(f"Ошибка: {e}")
+        return jsonify({"error": str(e)}), 500
+
+    # Настраиваем CORS (разрешаем доступ к API из других доменов, если это включено в настройках)
+    if app.config.get('ENABLE_CORS', False):  # Проверяем, включен ли CORS
         CORS(app, resources={
-            r"/api/*": {"origins": app.config['ALLOWED_ORIGINS']}
+            r"/api/*": {"origins": app.config['ALLOWED_ORIGINS']}  # Разрешаем доступ только к API
         })
     
-    return app
+    return app  # Возвращаем настроенное приложение
 
+# Создаем экземпляр приложения
 app = create_app()
 
-#def validate_input используется для проверки значений из config.py
-def validate_input(width, height, steps):
+# Функция для проверки входных данных (ширина, высота, количество ступеней)
+def validate_input(width: float, height: float, steps: int) -> None:
     """Проверяет входные параметры на соответствие конфигурационным ограничениям."""
-    config = app.config
+    config = app.config  # Получаем настройки приложения
     
-    # Проверка ширины
+    # Проверяем, что ширина является числом
     if not isinstance(width, (int, float)):
         raise ValueError("Ширина должна быть числом")
+    # Проверяем, что ширина находится в допустимом диапазоне
     if not config['MIN_WIDTH'] <= width <= config['MAX_WIDTH']:
         raise ValueError(
             f"Ширина {width} мм вне допустимого диапазона: "
             f"{config['MIN_WIDTH']}..{config['MAX_WIDTH']} мм"
         )
     
-    # Проверка высоты
+    # Проверяем, что высота является числом
     if not isinstance(height, (int, float)):
         raise ValueError("Высота должна быть числом")
+    # Проверяем, что высота находится в допустимом диапазоне
     if not config['MIN_HEIGHT'] <= height <= config['MAX_HEIGHT']:
         raise ValueError(
             f"Высота {height} мм вне допустимого диапазона: "
             f"{config['MIN_HEIGHT']}..{config['MAX_HEIGHT']} мм"
         )
     
-    # Проверка ступеней (исправлено)
+    # Проверяем, что количество ступеней является целым числом и больше или равно 1
     if not isinstance(steps, int) or steps < 1:
         raise ValueError("Количество ступеней должно быть целым числом ≥ 1")
 
-def calculate_metal(width, height, steps, material, has_platform, platform_depth=0, reinforcements_count=1, paint_consumption=110, frame_color='RAL9005'):
+def calculate_metal(
+    width: float, height: float, steps: int, material: str, has_platform: bool,
+    platform_depth: float = 0, reinforcements_count: int = 1, paint_consumption: float = 110,
+    frame_color: str = 'RAL9005'
+) -> dict:
+    """Выполняет расчеты металлоконструкций."""
     try:
         validate_input(width, height, steps)
         
@@ -308,44 +337,60 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
 
 @app.route('/')
 def index():
+    # Отображаем главную страницу с выбором вариантов
     return render_template('index_choose.html')
 
 @app.route('/eco.html')
 def eco():
+    # Отображаем страницу с вариантом "Эко"
     return render_template('eco.html')
     
 @app.route('/optima.html')
 def optima():
+    # Отображаем страницу с вариантом "Оптима"
     return render_template('optima.html')
     
 @app.route('/komfort.html')
 def komfort():
+    # Отображаем страницу с вариантом "Комфорт"
     return render_template('komfort.html')
     
 @app.route('/api/calculate', methods=['POST'])   
- 
 def calculate():
-    data = request.json
+    """API-метод для расчета металлоконструкций."""
     try:
-        width = float(data['width'])
-        height = float(data['height'])
-        steps = int(data['steps'])
-        material = data['material']
-        has_platform = data['has_platform']
-        platform_depth = float(data['platform_depth']) if has_platform else 0
-        reinforcements_count = int(data.get('reinforcements_count', 1))
-        paint_consumption = float(data.get('paint_consumption', 110))  # г/м²
-        frame_color = data.get('frame_color', 'RAL9005')
+        if not request.is_json:
+            raise ValueError("Content-Type должен быть 'application/json'")
+        data = request.get_json()
+        # Извлекаем параметры из запроса
+        width = float(data['width'])  # Ширина конструкции
+        height = float(data['height'])  # Высота конструкции
+        steps = int(data['steps'])  # Количество ступеней
+        material = data['material']  # Материал ступеней
+        has_platform = data['has_platform']  # Наличие платформы
+        platform_depth = float(data['platform_depth']) if has_platform else 0  # Глубина платформы (если есть)
+        reinforcements_count = int(data.get('reinforcements_count', 1))  # Количество усилений (по умолчанию 1)
+        paint_consumption = float(data.get('paint_consumption', 110))  # Расход краски (г/м²)
+        frame_color = data.get('frame_color', 'RAL9005')  # Цвет каркаса (по умолчанию черный)
 
+        # Выполняем расчет металлоконструкции
         result = calculate_metal(width, height, steps, material, has_platform, platform_depth, reinforcements_count, paint_consumption, frame_color)
         if result is None:
+            # Если расчет не удался, возвращаем ошибку
             return jsonify({"error": "Неверный материал"}), 400
 
-        return jsonify(result)
-    except (KeyError, ValueError) as e:
-        app.logger.error(f"Ошибка обработки запроса: {e}")
+        return jsonify(result)  # Возвращаем результат в формате JSON
+    except KeyError as e:
+        app.logger.error(f"Ошибка обработки запроса: отсутствует ключ {e}")
+        return jsonify({"error": f"Отсутствует обязательный параметр: {e}"}), 400
+    except ValueError as e:
+        app.logger.error(f"Ошибка валидации: {e}")
         return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        app.logger.error(f"Неизвестная ошибка: {e}")
+        return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
 if __name__ == '__main__':
-    debug = app.config['DEBUG']
-    app.run(host='0.0.0.0', port=5000, debug=debug)
+    # Запускаем приложение на локальном сервере
+    debug = app.config['DEBUG']  # Проверяем, включен ли режим отладки
+    app.run(host='0.0.0.0', port=5000, debug=debug)  # Запускаем сервер на порту 5000

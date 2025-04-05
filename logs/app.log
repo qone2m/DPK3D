@@ -70,3 +70,17 @@ Traceback (most recent call last):
 NameError: name 'profile_thickness' is not defined
 2025-04-04 22:37:06,117 ERROR: Ошибка обработки запроса: 'PROFILE_THICKNESS' [in C:\Users\htcbu\OneDrive\Рабочий стол\DPK_Sebestoimost Stable (2)\DPK_Sebestoimost Stable\DPK_Sebestoimost\app.py:346]
 2025-04-04 22:38:28,601 ERROR: Ошибка обработки запроса: 'PROFILE_THICKNESS' [in C:\Users\htcbu\OneDrive\Рабочий стол\DPK_Sebestoimost Stable (2)\DPK_Sebestoimost Stable\DPK_Sebestoimost\app.py:346]
+2025-04-05 09:22:35,742 - app - INFO - Получен запрос: POST http://localhost/api/calculate с данными {'has_platform': False, 'height': 2000, 'material': 'ДПК', 'steps': 10, 'width': 100}
+2025-04-05 09:22:35,743 - app - ERROR - Ошибка валидации: Ширина 100.0 мм вне допустимого диапазона: 300..6000 мм
+2025-04-05 09:22:35,744 - app - INFO - Получен запрос: POST http://localhost/api/calculate с данными {'height': 2000, 'width': 800}
+2025-04-05 09:22:35,745 - app - ERROR - Ошибка обработки запроса: отсутствует ключ 'steps'
+2025-04-05 09:22:35,746 - app - INFO - Получен запрос: POST http://localhost/api/calculate с данными {'has_platform': False, 'height': 2000, 'material': 'ДПК', 'platform_depth': 0, 'reinforcements_count': 1, 'steps': 10, 'width': 800}
+2025-04-05 09:22:35,749 - app - ERROR - Ошибка валидации: Ширина 100 мм вне допустимого диапазона: 300..6000 мм
+2025-04-05 09:22:35,751 - app - INFO - Получен запрос: GET http://localhost/ без JSON данных
+2025-04-05 09:22:45,855 - app - INFO - Получен запрос: POST http://localhost/api/calculate с данными {'has_platform': False, 'height': 2000, 'material': 'ДПК', 'steps': 10, 'width': 100}
+2025-04-05 09:22:45,858 - app - ERROR - Ошибка валидации: Ширина 100.0 мм вне допустимого диапазона: 300..6000 мм
+2025-04-05 09:22:45,860 - app - INFO - Получен запрос: POST http://localhost/api/calculate с данными {'height': 2000, 'width': 800}
+2025-04-05 09:22:45,860 - app - ERROR - Ошибка обработки запроса: отсутствует ключ 'steps'
+2025-04-05 09:22:45,864 - app - INFO - Получен запрос: POST http://localhost/api/calculate с данными {'has_platform': False, 'height': 2000, 'material': 'ДПК', 'platform_depth': 0, 'reinforcements_count': 1, 'steps': 10, 'width': 800}
+2025-04-05 09:22:45,865 - app - ERROR - Ошибка валидации: Ширина 100 мм вне допустимого диапазона: 300..6000 мм
+2025-04-05 09:22:45,867 - app - INFO - Получен запрос: GET http://localhost/ без JSON данных
