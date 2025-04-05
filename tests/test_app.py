@@ -34,8 +34,8 @@ class TestApp(unittest.TestCase):
     def test_calculate_metal_invalid(self):
         # Проверка обработки некорректных входных данных (слишком маленькая ширина)
         result = calculate_metal(
-            width=100,  # слишком маленькая ширина
-            height=2000,
+            width=800,  # слишком маленькая ширина
+            height=1700,
             steps=10,
             material="ДПК",
             has_platform=False
