@@ -1,99 +1,71 @@
-2025-04-04 22:35:16,280 ERROR: Exception on /api/calculate [POST] [in C:\Users\htcbu\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py:838]
-Traceback (most recent call last):
-  File "C:\Users\htcbu\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1473, in wsgi_app
-    response = self.full_dispatch_request()
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\htcbu\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 882, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\htcbu\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask_cors\extension.py", line 194, in wrapped_function
-    return cors_after_request(app.make_response(f(*args, **kwargs)))
-                                                ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\htcbu\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 880, in full_dispatch_request
-    rv = self.dispatch_request()
-         ^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\htcbu\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 865, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\htcbu\OneDrive\Рабочий стол\DPK_Sebestoimost Stable (2)\DPK_Sebestoimost Stable\DPK_Sebestoimost\app.py", line 339, in calculate
-    result = calculate_metal(width, height, steps, material, has_platform, platform_depth, reinforcements_count, paint_consumption, frame_color)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\htcbu\OneDrive\Рабочий стол\DPK_Sebestoimost Stable (2)\DPK_Sebestoimost Stable\DPK_Sebestoimost\app.py", line 113, in calculate_metal
-    base_depth_profiles = 2 * step_depth * steps - 4 * profile_thickness
-                                                       ^^^^^^^^^^^^^^^^^
-NameError: name 'profile_thickness' is not defined
-2025-04-04 22:36:10,874 ERROR: Exception on /api/calculate [POST] [in C:\Users\htcbu\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py:838]
-Traceback (most recent call last):
-  File "C:\Users\htcbu\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1473, in wsgi_app
-    response = self.full_dispatch_request()
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\htcbu\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 882, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\htcbu\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask_cors\extension.py", line 194, in wrapped_function
-    return cors_after_request(app.make_response(f(*args, **kwargs)))
-                                                ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\htcbu\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 880, in full_dispatch_request
-    rv = self.dispatch_request()
-         ^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\htcbu\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 865, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\htcbu\OneDrive\Рабочий стол\DPK_Sebestoimost Stable (2)\DPK_Sebestoimost Stable\DPK_Sebestoimost\app.py", line 339, in calculate
-    result = calculate_metal(width, height, steps, material, has_platform, platform_depth, reinforcements_count, paint_consumption, frame_color)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\htcbu\OneDrive\Рабочий стол\DPK_Sebestoimost Stable (2)\DPK_Sebestoimost Stable\DPK_Sebestoimost\app.py", line 113, in calculate_metal
-    base_depth_profiles = 2 * step_depth * steps - 4 * profile_thickness
-                                                       ^^^^^^^^^^^^^^^^^
-NameError: name 'profile_thickness' is not defined
-2025-04-04 22:36:51,147 ERROR: Exception on /api/calculate [POST] [in C:\Users\htcbu\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py:838]
-Traceback (most recent call last):
-  File "C:\Users\htcbu\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 1473, in wsgi_app
-    response = self.full_dispatch_request()
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\htcbu\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 882, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\htcbu\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask_cors\extension.py", line 194, in wrapped_function
-    return cors_after_request(app.make_response(f(*args, **kwargs)))
-                                                ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\htcbu\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 880, in full_dispatch_request
-    rv = self.dispatch_request()
-         ^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\htcbu\AppData\Local\Programs\Python\Python312\Lib\site-packages\flask\app.py", line 865, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\htcbu\OneDrive\Рабочий стол\DPK_Sebestoimost Stable (2)\DPK_Sebestoimost Stable\DPK_Sebestoimost\app.py", line 339, in calculate
-  File "C:\Users\htcbu\OneDrive\Рабочий стол\DPK_Sebestoimost Stable (2)\DPK_Sebestoimost Stable\DPK_Sebestoimost\app.py", line 113, in calculate_metal
-    base_width_profiles = 2 * width
-                                    
-NameError: name 'profile_thickness' is not defined
-2025-04-04 22:37:06,117 ERROR: Ошибка обработки запроса: 'PROFILE_THICKNESS' [in C:\Users\htcbu\OneDrive\Рабочий стол\DPK_Sebestoimost Stable (2)\DPK_Sebestoimost Stable\DPK_Sebestoimost\app.py:346]
-2025-04-04 22:38:28,601 ERROR: Ошибка обработки запроса: 'PROFILE_THICKNESS' [in C:\Users\htcbu\OneDrive\Рабочий стол\DPK_Sebestoimost Stable (2)\DPK_Sebestoimost Stable\DPK_Sebestoimost\app.py:346]
-2025-04-05 09:22:35,742 - app - INFO - Получен запрос: POST http://localhost/api/calculate с данными {'has_platform': False, 'height': 2000, 'material': 'ДПК', 'steps': 10, 'width': 100}
-2025-04-05 09:22:35,743 - app - ERROR - Ошибка валидации: Ширина 100.0 мм вне допустимого диапазона: 300..6000 мм
-2025-04-05 09:22:35,744 - app - INFO - Получен запрос: POST http://localhost/api/calculate с данными {'height': 2000, 'width': 800}
-2025-04-05 09:22:35,745 - app - ERROR - Ошибка обработки запроса: отсутствует ключ 'steps'
-2025-04-05 09:22:35,746 - app - INFO - Получен запрос: POST http://localhost/api/calculate с данными {'has_platform': False, 'height': 2000, 'material': 'ДПК', 'platform_depth': 0, 'reinforcements_count': 1, 'steps': 10, 'width': 800}
-2025-04-05 09:22:35,749 - app - ERROR - Ошибка валидации: Ширина 100 мм вне допустимого диапазона: 300..6000 мм
-2025-04-05 09:22:35,751 - app - INFO - Получен запрос: GET http://localhost/ без JSON данных
-2025-04-05 09:22:45,855 - app - INFO - Получен запрос: POST http://localhost/api/calculate с данными {'has_platform': False, 'height': 2000, 'material': 'ДПК', 'steps': 10, 'width': 100}
-2025-04-05 09:22:45,858 - app - ERROR - Ошибка валидации: Ширина 100.0 мм вне допустимого диапазона: 300..6000 мм
-2025-04-05 09:22:45,860 - app - INFO - Получен запрос: POST http://localhost/api/calculate с данными {'height': 2000, 'width': 800}
-2025-04-05 09:22:45,860 - app - ERROR - Ошибка обработки запроса: отсутствует ключ 'steps'
-2025-04-05 09:22:45,864 - app - INFO - Получен запрос: POST http://localhost/api/calculate с данными {'has_platform': False, 'height': 2000, 'material': 'ДПК', 'platform_depth': 0, 'reinforcements_count': 1, 'steps': 10, 'width': 800}
-2025-04-05 09:22:45,865 - app - ERROR - Ошибка валидации: Ширина 100 мм вне допустимого диапазона: 300..6000 мм
-2025-04-05 09:22:45,867 - app - INFO - Получен запрос: GET http://localhost/ без JSON данных
-2025-04-05 10:30:45,331 - app - INFO - Получен запрос: GET http://192.168.1.88:5000/ без JSON данных
-2025-04-05 10:30:45,675 - app - INFO - Получен запрос: GET http://192.168.1.88:5000/favicon.ico без JSON данных
-2025-04-05 10:30:45,676 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-2025-04-05 10:30:46,466 - app - INFO - Получен запрос: GET http://192.168.1.88:5000/optima.html без JSON данных
-2025-04-05 10:30:46,524 - app - INFO - Получен запрос: GET http://192.168.1.88:5000/static/js/optima.js без JSON данных
-2025-04-05 10:30:47,019 - app - INFO - Получен запрос: GET http://192.168.1.88:5000/favicon.ico без JSON данных
-2025-04-05 10:30:47,023 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-2025-04-05 10:34:24,159 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/ без JSON данных
-2025-04-05 10:34:26,838 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/ без JSON данных
-2025-04-05 10:34:27,106 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/favicon.ico без JSON данных
-2025-04-05 10:34:27,107 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-2025-04-05 10:34:32,617 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/eco.html без JSON данных
-2025-04-05 10:34:32,679 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/static/js/eco.js без JSON данных
+2025-04-05 10:34:32,877 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/favicon.ico без JSON данных
+2025-04-05 10:34:32,883 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:34:37,929 - app - INFO - Получен запрос: POST http://127.0.0.1:5000/api/calculate с данными {'width': 1500, 'height': 850, 'steps': 5, 'material': 'ДПК', 'has_platform': False, 'platform_depth': 0, 'reinforcements_count': 1, 'paint_consumption': 110, 'frame_color': 'RAL9005'}
+2025-04-05 10:36:58,436 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/ без JSON данных
+2025-04-05 10:36:58,818 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/favicon.ico без JSON данных
+2025-04-05 10:36:58,826 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:37:18,828 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/ без JSON данных
+2025-04-05 10:37:19,006 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/favicon.ico без JSON данных
+2025-04-05 10:37:19,007 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:37:20,821 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/ без JSON данных
+2025-04-05 10:37:21,012 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/favicon.ico без JSON данных
+2025-04-05 10:37:21,012 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:37:36,189 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/ без JSON данных
+2025-04-05 10:37:36,507 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/favicon.ico без JSON данных
+2025-04-05 10:37:36,507 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:37:37,905 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/eco.html без JSON данных
+2025-04-05 10:37:37,953 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/static/js/eco.js без JSON данных
+2025-04-05 10:37:38,146 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/favicon.ico без JSON данных
+2025-04-05 10:37:38,147 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:37:47,787 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/ без JSON данных
+2025-04-05 10:37:47,849 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/images/eco.jpg без JSON данных
+2025-04-05 10:37:47,861 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:37:47,862 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/images/optima.jpg без JSON данных
+2025-04-05 10:37:47,866 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:37:47,927 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/images/komfort.jpg без JSON данных
+2025-04-05 10:37:47,931 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:37:48,127 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/favicon.ico без JSON данных
+2025-04-05 10:37:48,127 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:37:51,764 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/ без JSON данных
+2025-04-05 10:37:51,803 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/images/eco.jpg без JSON данных
+2025-04-05 10:37:51,804 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:37:51,811 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/images/optima.jpg без JSON данных
+2025-04-05 10:37:51,813 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/images/komfort.jpg без JSON данных
+2025-04-05 10:37:51,813 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:37:51,814 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:37:51,956 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/favicon.ico без JSON данных
+2025-04-05 10:37:51,957 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:40:07,133 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/ без JSON данных
+2025-04-05 10:40:07,200 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/images/eco.jpg без JSON данных
+2025-04-05 10:40:07,203 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:40:07,204 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/images/optima.jpg без JSON данных
+2025-04-05 10:40:07,205 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/images/komfort.jpg без JSON данных
+2025-04-05 10:40:07,205 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:40:07,205 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:40:07,495 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/favicon.ico без JSON данных
+2025-04-05 10:40:07,496 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:40:15,116 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/ без JSON данных
+2025-04-05 10:40:15,190 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/images/eco.png без JSON данных
+2025-04-05 10:40:15,192 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:40:15,209 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/images/optima.png без JSON данных
+2025-04-05 10:40:15,211 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/images/komfort.png без JSON данных
+2025-04-05 10:40:15,211 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:40:15,216 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:40:15,399 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/favicon.ico без JSON данных
+2025-04-05 10:40:15,399 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:40:22,572 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/ без JSON данных
+2025-04-05 10:40:22,625 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/images/eco.png без JSON данных
+2025-04-05 10:40:22,627 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:40:22,635 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/images/optima.png без JSON данных
+2025-04-05 10:40:22,636 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/images/komfort.png без JSON данных
+2025-04-05 10:40:22,637 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:40:22,638 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:40:22,775 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/favicon.ico без JSON данных
+2025-04-05 10:40:22,776 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:40:23,340 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/ без JSON данных
+2025-04-05 10:40:23,380 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/images/eco.png без JSON данных
+2025-04-05 10:40:23,381 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/images/optima.png без JSON данных
+2025-04-05 10:40:23,382 - app - INFO - Получен запрос: GET http://127.0.0.1:5000/images/komfort.png без JSON данных
+2025-04-05 10:40:23,382 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:40:23,382 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-05 10:40:23,383 - app - ERROR - Ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
