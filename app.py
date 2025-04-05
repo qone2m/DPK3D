@@ -1,32 +1,69 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-from config import DevelopmentConfig, ProductionConfig
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+from config import get_config
 
-app = Flask(__name__)
-app.config.from_object(DevelopmentConfig if app.debug else ProductionConfig)
-CORS(app)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 
-# Настройка логирования
-if not os.path.exists('logs'):
-    os.makedirs('logs')
+def create_app():
+    app = Flask(__name__, template_folder=TEMPLATE_DIR)  # Явно указываем папку шаблонов
+    app.config.from_object(get_config())
+    
+    # Настройка логирования
+    if not os.path.exists('logs'):
+        os.makedirs('logs')
+    
+    file_handler = RotatingFileHandler(
+        'logs/app.log',
+        maxBytes=10240,
+        backupCount=10
+    )
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    ))
+    file_handler.setLevel(logging.INFO)
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(logging.INFO)
+    
+    # Настройка CORS
+    if app.config.get('ENABLE_CORS', False):
+        CORS(app, resources={
+            r"/api/*": {"origins": app.config['ALLOWED_ORIGINS']}
+        })
+    
+    return app
 
-file_handler = RotatingFileHandler('logs/app.log', maxBytes=10240, backupCount=10)
-file_handler.setFormatter(logging.Formatter(
-    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-))
-file_handler.setLevel(logging.INFO)
-app.logger.addHandler(file_handler)
-app.logger.setLevel(logging.INFO)
-app.logger.info('Stair Calculator startup')
+app = create_app()
 
+#def validate_input используется для проверки значений из config.py
 def validate_input(width, height, steps):
-    if not app.config['MIN_WIDTH'] <= width <= app.config['MAX_WIDTH']:
-        raise ValueError(f"Ширина должна быть от {app.config['MIN_WIDTH']} до {app.config['MAX_WIDTH']} мм")
-    if not app.config['MIN_HEIGHT'] <= height <= app.config['MAX_HEIGHT']:
-        raise ValueError(f"Высота должна быть от {app.config['MIN_HEIGHT']} до {app.config['MAX_HEIGHT']} мм")
+    """Проверяет входные параметры на соответствие конфигурационным ограничениям."""
+    config = app.config
+    
+    # Проверка ширины
+    if not isinstance(width, (int, float)):
+        raise ValueError("Ширина должна быть числом")
+    if not config['MIN_WIDTH'] <= width <= config['MAX_WIDTH']:
+        raise ValueError(
+            f"Ширина {width} мм вне допустимого диапазона: "
+            f"{config['MIN_WIDTH']}..{config['MAX_WIDTH']} мм"
+        )
+    
+    # Проверка высоты
+    if not isinstance(height, (int, float)):
+        raise ValueError("Высота должна быть числом")
+    if not config['MIN_HEIGHT'] <= height <= config['MAX_HEIGHT']:
+        raise ValueError(
+            f"Высота {height} мм вне допустимого диапазона: "
+            f"{config['MIN_HEIGHT']}..{config['MAX_HEIGHT']} мм"
+        )
+    
+    # Проверка ступеней (исправлено)
+    if not isinstance(steps, int) or steps < 1:
+        raise ValueError("Количество ступеней должно быть целым числом ≥ 1")
 
 def calculate_metal(width, height, steps, material, has_platform, platform_depth=0, reinforcements_count=1, paint_consumption=110, frame_color='RAL9005'):
     try:
@@ -271,9 +308,22 @@ def calculate_metal(width, height, steps, material, has_platform, platform_depth
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index_choose.html')
 
-@app.route('/api/calculate', methods=['POST'])
+@app.route('/eco.html')
+def eco():
+    return render_template('eco.html')
+    
+@app.route('/optima.html')
+def optima():
+    return render_template('optima.html')
+    
+@app.route('/komfort.html')
+def komfort():
+    return render_template('komfort.html')
+    
+@app.route('/api/calculate', methods=['POST'])   
+ 
 def calculate():
     data = request.json
     try:
@@ -297,4 +347,5 @@ def calculate():
         return jsonify({"error": str(e)}), 400
 
 if __name__ == '__main__':
-    app.run(debug=True, host='localhost', port=5000)
+    debug = app.config['DEBUG']
+    app.run(host='0.0.0.0', port=5000, debug=debug)

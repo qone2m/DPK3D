@@ -1,0 +1,87 @@
+2024-12-17 17:31:20,821 INFO: Stair Calculator startup
+2024-12-17 17:31:20,921 INFO: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.149:5000
+2024-12-17 17:31:20,921 INFO: [33mPress CTRL+C to quit[0m
+2024-12-17 17:31:20,924 INFO:  * Restarting with stat
+2024-12-17 17:31:21,387 INFO: Stair Calculator startup
+2024-12-17 17:31:21,446 WARNING:  * Debugger is active!
+2024-12-17 17:31:21,457 INFO:  * Debugger PIN: 143-104-694
+2024-12-17 17:31:25,190 INFO: 192.168.0.149 - - [17/Dec/2024 17:31:25] "GET / HTTP/1.1" 200 -
+2024-12-17 17:31:25,597 INFO: 192.168.0.149 - - [17/Dec/2024 17:31:25] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2024-12-17 17:31:29,798 DEBUG: Получен POST запрос на /api/calculate
+2024-12-17 17:31:29,802 DEBUG: Полученные данные: {'width': 1000, 'height': 510, 'steps': 3, 'material': 'ДПК', 'has_platform': False, 'platform_depth': 0, 'reinforcements_count': 1, 'paint_consumption': 110, 'frame_color': 'RAL9005'}
+2024-12-17 17:31:29,803 DEBUG: Преобразованные данные: width=1000.0, height=510.0, steps=3, material=ДПК, has_platform=False, platform_depth=0
+2024-12-17 17:31:29,803 DEBUG: Начало расчета в calculate_metal
+2024-12-17 17:31:29,803 DEBUG: Начало calculate_metal с параметрами: width=1000.0, height=510.0, steps=3, material=ДПК, has_platform=False, platform_depth=0
+2024-12-17 17:31:29,804 DEBUG: Константы: profile_thickness=20, dpk_depth=305, pvl_depth=300, dpk_reduction=25
+2024-12-17 17:31:29,804 DEBUG: Выбранная глубина ступени: 305
+2024-12-17 17:31:29,804 DEBUG: Высота ступени: 170.0
+2024-12-17 17:31:29,805 DEBUG: Длина основания: 3750.0
+2024-12-17 17:31:30,164 DEBUG: Параметры ДПК: длина=0.0м, количество досок=0
+2024-12-17 17:31:30,165 DEBUG: Итоговый результат: {'dimensions': {'width': 1000.0, 'height': 510.0, 'step_height': 170.0, 'material': 'ДПК', 'frame_color': 'RAL9005', 'has_platform': False, 'platform_depth': 0}, 'total_length': {'mm': 3750, 'm': 3.75}, 'paint': {'total_area': 0.07, 'total_weight': 8}, 'additional_materials': {'dpk_length': 0.0, 'dpk_boards': 0, 'dpk_color': 'Венге'}}
+2024-12-17 17:31:30,165 DEBUG: Результат расчета: {'dimensions': {'width': 1000.0, 'height': 510.0, 'step_height': 170.0, 'material': 'ДПК', 'frame_color': 'RAL9005', 'has_platform': False, 'platform_depth': 0}, 'total_length': {'mm': 3750, 'm': 3.75}, 'paint': {'total_area': 0.07, 'total_weight': 8}, 'additional_materials': {'dpk_length': 0.0, 'dpk_boards': 0, 'dpk_color': 'Венге'}}
+2024-12-17 17:31:30,170 INFO: 192.168.0.149 - - [17/Dec/2024 17:31:30] "POST /api/calculate HTTP/1.1" 200 -
+2024-12-17 17:35:01,593 INFO: Stair Calculator startup
+2024-12-17 17:35:01,788 INFO: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.149:5000
+2024-12-17 17:35:01,788 INFO: [33mPress CTRL+C to quit[0m
+2024-12-17 17:35:01,795 INFO:  * Restarting with stat
+2024-12-17 17:35:06,290 INFO: Stair Calculator startup
+2024-12-17 17:35:08,297 WARNING:  * Debugger is active!
+2024-12-17 17:35:08,455 INFO:  * Debugger PIN: 143-104-694
+2024-12-17 17:35:12,203 INFO: 192.168.0.149 - - [17/Dec/2024 17:35:12] "GET / HTTP/1.1" 200 -
+2024-12-17 17:35:14,583 INFO: 192.168.0.149 - - [17/Dec/2024 17:35:14] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2024-12-17 17:35:19,403 DEBUG: Получен POST запрос на /api/calculate
+2024-12-17 17:35:19,563 DEBUG: Полученные данные: {'width': 1000, 'height': 340, 'steps': 2, 'material': 'ДПК', 'has_platform': False, 'platform_depth': 0, 'reinforcements_count': 1, 'paint_consumption': 110, 'frame_color': 'RAL9005'}
+2024-12-17 17:35:19,645 DEBUG: Преобразованные данные: width=1000.0, height=340.0, steps=2, material=ДПК, has_platform=False, platform_depth=0
+2024-12-17 17:35:19,720 DEBUG: Начало расчета в calculate_metal
+2024-12-17 17:35:19,863 DEBUG: Начало calculate_metal с параметрами: width=1000.0, height=340.0, steps=2, material=ДПК, has_platform=False, platform_depth=0
+2024-12-17 17:35:19,875 DEBUG: Константы: profile_thickness=20, dpk_depth=305, pvl_depth=300, dpk_reduction=25
+2024-12-17 17:35:19,877 DEBUG: Выбранная глубина ступени: 305
+2024-12-17 17:35:19,879 DEBUG: Высота ступени: 170.0
+2024-12-17 17:35:19,880 DEBUG: Длина основания: 3140.0
+2024-12-17 17:35:19,908 DEBUG: Параметры ДПК: длина=4.0м, количество досок=1
+2024-12-17 17:35:19,909 DEBUG: Итоговый результат: {'dimensions': {'width': 1000.0, 'height': 340.0, 'step_height': 170.0, 'material': 'ДПК', 'frame_color': 'RAL9005', 'has_platform': False, 'platform_depth': 0}, 'total_length': {'mm': 3140, 'm': 3.14}, 'paint': {'total_area': 0.06, 'total_weight': 7}, 'additional_materials': {'dpk_length': 4.0, 'dpk_boards': 1, 'dpk_color': 'Венге', 'bolts_count': 8, 'nuts_count': 8}}
+2024-12-17 17:35:19,909 DEBUG: Результат расчета: {'dimensions': {'width': 1000.0, 'height': 340.0, 'step_height': 170.0, 'material': 'ДПК', 'frame_color': 'RAL9005', 'has_platform': False, 'platform_depth': 0}, 'total_length': {'mm': 3140, 'm': 3.14}, 'paint': {'total_area': 0.06, 'total_weight': 7}, 'additional_materials': {'dpk_length': 4.0, 'dpk_boards': 1, 'dpk_color': 'Венге', 'bolts_count': 8, 'nuts_count': 8}}
+2024-12-17 17:35:19,910 INFO: 192.168.0.149 - - [17/Dec/2024 17:35:19] "POST /api/calculate HTTP/1.1" 200 -
+2024-12-17 17:35:25,405 DEBUG: Получен POST запрос на /api/calculate
+2024-12-17 17:35:25,414 DEBUG: Полученные данные: {'width': 1000, 'height': 340, 'steps': 2, 'material': 'ПВЛ', 'has_platform': False, 'platform_depth': 0, 'reinforcements_count': 1, 'paint_consumption': 110, 'frame_color': 'RAL9005'}
+2024-12-17 17:35:25,415 DEBUG: Преобразованные данные: width=1000.0, height=340.0, steps=2, material=ПВЛ, has_platform=False, platform_depth=0
+2024-12-17 17:35:25,425 DEBUG: Начало расчета в calculate_metal
+2024-12-17 17:35:25,427 DEBUG: Начало calculate_metal с параметрами: width=1000.0, height=340.0, steps=2, material=ПВЛ, has_platform=False, platform_depth=0
+2024-12-17 17:35:25,476 DEBUG: Константы: profile_thickness=20, dpk_depth=305, pvl_depth=300, dpk_reduction=25
+2024-12-17 17:35:25,494 DEBUG: Выбранная глубина ступени: 300
+2024-12-17 17:35:25,612 DEBUG: Высота ступени: 170.0
+2024-12-17 17:35:25,651 DEBUG: Длина основания: 3120.0
+2024-12-17 17:35:26,668 DEBUG: Итоговый результат: {'dimensions': {'width': 1000.0, 'height': 340.0, 'step_height': 170.0, 'material': 'ПВЛ', 'frame_color': 'RAL9005', 'has_platform': False, 'platform_depth': 0}, 'total_length': {'mm': 3120, 'm': 3.12}, 'paint': {'total_area': 1.26, 'total_weight': 139}, 'additional_materials': {'pvl_area': 0.6}}
+2024-12-17 17:35:26,700 DEBUG: Результат расчета: {'dimensions': {'width': 1000.0, 'height': 340.0, 'step_height': 170.0, 'material': 'ПВЛ', 'frame_color': 'RAL9005', 'has_platform': False, 'platform_depth': 0}, 'total_length': {'mm': 3120, 'm': 3.12}, 'paint': {'total_area': 1.26, 'total_weight': 139}, 'additional_materials': {'pvl_area': 0.6}}
+2024-12-17 17:35:26,739 INFO: 192.168.0.149 - - [17/Dec/2024 17:35:26] "POST /api/calculate HTTP/1.1" 200 -
+2024-12-17 17:35:38,899 DEBUG: Получен POST запрос на /api/calculate
+2024-12-17 17:35:38,904 DEBUG: Полученные данные: {'width': 1000, 'height': 170, 'steps': 1, 'material': 'ПВЛ', 'has_platform': False, 'platform_depth': 0, 'reinforcements_count': 1, 'paint_consumption': 110, 'frame_color': 'RAL9005'}
+2024-12-17 17:35:38,905 DEBUG: Преобразованные данные: width=1000.0, height=170.0, steps=1, material=ПВЛ, has_platform=False, platform_depth=0
+2024-12-17 17:35:38,905 DEBUG: Начало расчета в calculate_metal
+2024-12-17 17:35:38,906 DEBUG: Начало calculate_metal с параметрами: width=1000.0, height=170.0, steps=1, material=ПВЛ, has_platform=False, platform_depth=0
+2024-12-17 17:35:38,906 DEBUG: Константы: profile_thickness=20, dpk_depth=305, pvl_depth=300, dpk_reduction=25
+2024-12-17 17:35:38,909 DEBUG: Выбранная глубина ступени: 300
+2024-12-17 17:35:39,003 DEBUG: Высота ступени: 170.0
+2024-12-17 17:35:39,025 DEBUG: Длина основания: 2520.0
+2024-12-17 17:35:39,160 DEBUG: Итоговый результат: {'dimensions': {'width': 1000.0, 'height': 170.0, 'step_height': 170.0, 'material': 'ПВЛ', 'frame_color': 'RAL9005', 'has_platform': False, 'platform_depth': 0}, 'total_length': {'mm': 2520, 'm': 2.52}, 'paint': {'total_area': 0.65, 'total_weight': 72}, 'additional_materials': {'pvl_area': 0.3}}
+2024-12-17 17:35:39,166 DEBUG: Результат расчета: {'dimensions': {'width': 1000.0, 'height': 170.0, 'step_height': 170.0, 'material': 'ПВЛ', 'frame_color': 'RAL9005', 'has_platform': False, 'platform_depth': 0}, 'total_length': {'mm': 2520, 'm': 2.52}, 'paint': {'total_area': 0.65, 'total_weight': 72}, 'additional_materials': {'pvl_area': 0.3}}
+2024-12-17 17:35:39,168 INFO: 192.168.0.149 - - [17/Dec/2024 17:35:39] "POST /api/calculate HTTP/1.1" 200 -
+2024-12-17 17:35:54,757 DEBUG: Получен POST запрос на /api/calculate
+2024-12-17 17:35:54,759 DEBUG: Полученные данные: {'width': 1000, 'height': 170, 'steps': 1, 'material': 'ДПК', 'has_platform': False, 'platform_depth': 0, 'reinforcements_count': 1, 'paint_consumption': 110, 'frame_color': 'RAL9005'}
+2024-12-17 17:35:54,761 DEBUG: Преобразованные данные: width=1000.0, height=170.0, steps=1, material=ДПК, has_platform=False, platform_depth=0
+2024-12-17 17:35:54,762 DEBUG: Начало расчета в calculate_metal
+2024-12-17 17:35:54,784 DEBUG: Начало calculate_metal с параметрами: width=1000.0, height=170.0, steps=1, material=ДПК, has_platform=False, platform_depth=0
+2024-12-17 17:35:54,811 DEBUG: Константы: profile_thickness=20, dpk_depth=305, pvl_depth=300, dpk_reduction=25
+2024-12-17 17:35:54,823 DEBUG: Выбранная глубина ступени: 305
+2024-12-17 17:35:54,829 DEBUG: Высота ступени: 170.0
+2024-12-17 17:35:54,835 DEBUG: Длина основания: 2530.0
+2024-12-17 17:35:55,062 DEBUG: Параметры ДПК: длина=2.0м, количество досок=1
+2024-12-17 17:35:55,078 DEBUG: Итоговый результат: {'dimensions': {'width': 1000.0, 'height': 170.0, 'step_height': 170.0, 'material': 'ДПК', 'frame_color': 'RAL9005', 'has_platform': False, 'platform_depth': 0}, 'total_length': {'mm': 2530, 'm': 2.53}, 'paint': {'total_area': 0.05, 'total_weight': 6}, 'additional_materials': {'dpk_length': 2.0, 'dpk_boards': 1, 'dpk_color': 'Венге', 'bolts_count': 4, 'nuts_count': 4}}
+2024-12-17 17:35:55,085 DEBUG: Результат расчета: {'dimensions': {'width': 1000.0, 'height': 170.0, 'step_height': 170.0, 'material': 'ДПК', 'frame_color': 'RAL9005', 'has_platform': False, 'platform_depth': 0}, 'total_length': {'mm': 2530, 'm': 2.53}, 'paint': {'total_area': 0.05, 'total_weight': 6}, 'additional_materials': {'dpk_length': 2.0, 'dpk_boards': 1, 'dpk_color': 'Венге', 'bolts_count': 4, 'nuts_count': 4}}
+2024-12-17 17:35:55,099 INFO: 192.168.0.149 - - [17/Dec/2024 17:35:55] "POST /api/calculate HTTP/1.1" 200 -

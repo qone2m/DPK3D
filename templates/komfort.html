@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор металлокаркаса лестницы</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .main-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+        }
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        .control-panel {
+            position: relative;
+            z-index: 2;
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(5px);
+            padding: 20px;
+            overflow-y: auto;
+            height: 100vh;
+            width: 350px;
+            transition: transform 0.3s ease;
+        }
+        .left-panel {
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        .right-panel {
+            border-left: 1px solid rgba(0, 0, 0, 0.1);
+            margin-left: auto;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #000;
+        }
+        .hidden {
+            display: none;
+        }
+        .result-box {
+            background-color: rgba(248, 249, 250, 0.9);
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .quick-select {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        .material-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .material-btn.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+        @media (max-width: 768px) {
+            .control-panel {
+                width: 280px;
+            }
+            .control-panel.left-panel {
+                transform: translateX(-100%);
+            }
+            .control-panel.right-panel {
+                transform: translateX(100%);
+            }
+            .control-panel.active {
+                transform: translateX(0);
+            }
+            .toggle-panel {
+                position: absolute;
+                top: 50%;
+                width: 30px;
+                height: 60px;
+                background: rgba(255, 255, 255, 0.9);
+                border: 1px solid rgba(0, 0, 0, 0.1);
+                z-index: 3;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+            }
+            .toggle-left {
+                right: -30px;
+                border-radius: 0 5px 5px 0;
+            }
+            .toggle-right {
+                left: -30px;
+                border-radius: 5px 0 0 5px;
+            }
+            .quick-select button {
+                flex: 1 1 auto;
+                min-width: 60px;
+            }
+            .material-buttons {
+                flex-direction: column;
+            }
+            .material-btn {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="control-panel left-panel">
+            <h2 class="mb-4">Параметры лестницы</h2>
+            <div class="toggle-panel toggle-left d-md-none">›</div>
+            <form id="calculator-form">
+                <div class="mb-3">
+                    <label for="width" class="form-label">Ширина лестницы (мм)</label>
+                    <input type="number" class="form-control" id="width" required value="1000">
+                    <div class="quick-select mt-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="800">800</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="1000">1000</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="1200">1200</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-value="1500">1500</button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="height" class="form-label">Высота лестницы (мм)</label>
+                    <input type="number" class="form-control" id="height" required value="680">
+                    <div class="quick-select mt-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="170">170</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="340">340</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="510">510</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="680">680</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-value="850">850</button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="steps" class="form-label">Количество ступеней</label>
+                    <input type="number" class="form-control" id="steps" required value="4">
+                    <div class="quick-select mt-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="1">1</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="2">2</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="3">3</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="4">4</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-value="5">5</button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Материал ступеней</label>
+                    <div class="material-buttons">
+                        <input type="hidden" id="material" required>
+                        <input type="hidden" id="board-elevation" value="0">
+                        <button type="button" class="btn btn-outline-primary me-2 material-btn" data-value="ДПК">ДПК</button>
+                        <button type="button" class="btn btn-outline-primary me-2 material-btn" data-value="ПВЛ">ПВЛ</button>
+                        <button type="button" class="btn btn-outline-primary material-btn" data-value="ДПК+1 ПВЛ">ДПК+1 ПВЛ</button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Цвет каркаса</label>
+                    <div class="color-buttons d-flex gap-2">
+                        <input type="radio" class="btn-check" name="frame-color" id="color-ral9005" value="RAL9005" checked>
+                        <label class="btn btn-outline-dark" for="color-ral9005" title="RAL9005 - Венге">RAL9005</label>
+                        
+                        <input type="radio" class="btn-check" name="frame-color" id="color-ral8017" value="RAL8017">
+                        <label class="btn btn-outline-dark" for="color-ral8017" title="RAL8017 - Коричневый">RAL8017</label>
+                        
+                        <input type="radio" class="btn-check" name="frame-color" id="color-ral7024" value="RAL7024">
+                        <label class="btn btn-outline-dark" for="color-ral7024" title="RAL7024 - Серый">RAL7024</label>
+                    </div>
+                    <input type="hidden" id="frame-color" name="frame-color" value="RAL9005">
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="custom-reinforcements">
+                        <label class="form-check-label" for="custom-reinforcements">
+                            Индивидуальное количество стоек усиления
+                        </label>
+                    </div>
+                </div>
+                <div class="mb-3 hidden" id="reinforcements-count-container">
+                    <label for="reinforcements-count" class="form-label">Количество усилений</label>
+                    <input type="number" class="form-control" id="reinforcements-count" value="1">
+                </div>
+                <div class="mb-3">
+                    <label for="paint-consumption" class="form-label">Расход краски (г/м²)</label>
+                    <input type="number" class="form-control" id="paint-consumption" value="110" min="0" step="1">
+                    <small class="form-text text-muted">Стандартное значение: 110 г/м²</small>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="has-platform">
+                        <label class="form-check-label" for="has-platform">
+                            Есть площадка
+                        </label>
+                    </div>
+                </div>
+                <div class="mb-3 hidden" id="platform-depth-container">
+                    <label for="platform-depth" class="form-label">Глубина площадки (мм)</label>
+                    <input type="number" class="form-control" id="platform-depth">
+                    <div class="quick-select mt-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="305">305</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="460">460</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="615">615</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="770">770</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="925">925</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" data-value="1080">1080</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-value="1235">1235</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Рассчитать</button>
+            </form>
+        </div>
+
+        <div id="canvas-container"></div>
+
+        <div class="control-panel right-panel">
+            <h2 class="mb-4">Настройки отображения</h2>
+            <div class="toggle-panel toggle-right d-md-none">‹</div>
+            <div class="mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="show-covering" checked>
+                    <label class="form-check-label" for="show-covering">
+                        Показать покрытие ступеней
+                    </label>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="show-bolts" checked>
+                    <label class="form-check-label" for="show-bolts">
+                        Показать болты крепления
+                    </label>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="additional-bolts">
+                    <label class="form-check-label" for="additional-bolts">
+                        Дополнительные болты к усилениям
+                    </label>
+                </div>
+            </div>
+            <div id="result" class="result-box hidden">
+                <h4>Результаты расчета:</h4>
+                <div id="result-details"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="{{ url_for('static', filename='js/komfort.js') }}"></script>
+</body>
+</html>

@@ -1,8 +1,8 @@
 // Константы для валидации
-const MIN_WIDTH = 600;  // мм
-const MAX_WIDTH = 2000; // мм
+const MIN_WIDTH = 300;  // мм
+const MAX_WIDTH = 6000; // мм
 const MIN_HEIGHT = 100; // мм
-const MAX_HEIGHT = 3000; // мм
+const MAX_HEIGHT = 3400; // мм
 
 // Константы для цветов
 const COLOR_MAPPING = {
@@ -35,6 +35,7 @@ let stairModel = new THREE.Group();
 let coveringsGroup = new THREE.Group();
 let boltsGroup = new THREE.Group();
 const profile_thickness = 20; // Выносим в глобальную область
+const profile_thickness2 = 40; // Выносим в глобальную область
 
 // Обработчики для мобильных панелей
 document.addEventListener('DOMContentLoaded', function() {
@@ -171,13 +172,35 @@ function init() {
     controls.maxDistance = 5000;
     controls.maxPolarAngle = Math.PI / 1.5;
 
-    // Добавляем освещение
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambientLight);
+	// Основное освещение
+	const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Мягкий рассеянный свет
+	scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(1000, 1000, 1000);
-    scene.add(directionalLight);
+	// Основной направленный свет (имитация солнца)
+	const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
+	directionalLight.position.set(1500, 2000, 1000);
+	directionalLight.castShadow = true; // Включаем тени
+	directionalLight.shadow.mapSize.width = 1024; // Качество теней
+	directionalLight.shadow.mapSize.height = 1024;
+	directionalLight.shadow.camera.near = 500;
+	directionalLight.shadow.camera.far = 4000;
+	directionalLight.shadow.camera.left = -1000;
+	directionalLight.shadow.camera.right = 1000;
+	directionalLight.shadow.camera.top = 1000;
+	directionalLight.shadow.camera.bottom = -1000;
+	scene.add(directionalLight);
+
+	// Заполняющий свет с другой стороны
+	const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+	fillLight.position.set(-1000, 1000, -500);
+	scene.add(fillLight);
+
+	// Подсветка снизу для лучшей видимости деталей
+	const bottomLight = new THREE.HemisphereLight(0xffffff, 0x404040, 0.2);
+	scene.add(bottomLight);
+	
+	renderer.shadowMap.enabled = true;
+	renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     // Добавляем оси координат для отладки
     // const axesHelper = new THREE.AxesHelper(1000);
@@ -186,24 +209,112 @@ function init() {
     scene.add(stairModel);
     scene.add(coveringsGroup);
     scene.add(boltsGroup);
+	
+	// Оси координат (длина в миллиметрах)
+	const axesHelper = new THREE.AxesHelper(1000); // 2000 мм длина каждой оси
+	scene.add(axesHelper);
+
+	// Создаем подписи для осей
+	function createAxisLabel(text, color, position) {
+		const canvas = document.createElement('canvas');
+		canvas.width = 1000;
+		canvas.height = 1000;
+		const context = canvas.getContext('2d');
+		context.fillStyle = 'rgba(0, 0, 0, 0)';
+		context.fillRect(0, 0, canvas.width, canvas.height);
+		context.textAlign = 'center';
+		context.textBaseline = 'middle';
+		context.font = '28px ISOCPEUR';
+		context.fillStyle = color;
+		context.fillText(text, canvas.width/2, canvas.height/2);
+		
+		const texture = new THREE.CanvasTexture(canvas);
+		const material = new THREE.SpriteMaterial({ map: texture });
+		const sprite = new THREE.Sprite(material);
+		sprite.position.copy(position);
+		sprite.scale.set(850, 850, 850); // Размер подписи
+		return sprite;
+	}
+
+	// Добавляем подписи к осям
+	const labels = [
+		{ text: 'ШИРИНА', color: '#ff0000', position: new THREE.Vector3(1050, 0, 0) },
+		{ text: 'ВЫСОТА', color: '#00ff00', position: new THREE.Vector3(0, 1050, 0) },
+		{ text: 'ГЛУБИНА', color: '#0000ff', position: new THREE.Vector3(0, 0, 1050) }
+	];
+
+	labels.forEach(label => {
+		scene.add(createAxisLabel(label.text, label.color, label.position));
+	});	
 }
 
-// Обновляем функцию изменения размера
 function onWindowResize() {
     const container = document.getElementById('canvas-container');
-    const aspect = container.clientWidth / container.clientHeight;
     
-    camera.aspect = aspect;
-    camera.updateProjectionMatrix();
+    // Проверка на существование элемента
+    if (!container) {
+        console.error('Canvas container not found');
+        return;
+    }
+
+    // Получаем размеры с учетом devicePixelRatio для четкого отображения на HiDPI экранах
+    const width = container.clientWidth;
+    const height = container.clientHeight;
     
-    renderer.setSize(container.clientWidth, container.clientHeight);
+    // Проверка на валидные размеры
+    if (width <= 0 || height <= 0) {
+        console.warn('Invalid container dimensions', { width, height });
+        return;
+    }
+
+    // Обновляем камеру только если размеры изменились
+    const aspect = width / height;
+    if (camera.aspect !== aspect) {
+        camera.aspect = aspect;
+        camera.updateProjectionMatrix();
+    }
+
+    // Обновляем рендерер с учетом pixel ratio
+    const pixelRatio = window.devicePixelRatio || 1;
+    renderer.setSize(width, height, false);
+    renderer.setPixelRatio(Math.min(pixelRatio, 2)); // Ограничиваем максимальное значение для производительности
 }
 
+let isAnimating = true;
+
 function animate() {
+    if (!isAnimating) return;
+
+    // Оптимизированный вызов requestAnimationFrame
     requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
+
+    // Проверка на необходимость обновления контролов
+    if (controls && typeof controls.update === 'function') {
+        controls.update();
+    }
+
+    // Проверка наличия всех необходимых компонентов перед рендерингом
+    if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+    } else {
+        console.warn('Renderer, scene or camera not initialized');
+        stopAnimation();
+    }
 }
+
+function startAnimation() {
+    if (!isAnimating) {
+        isAnimating = true;
+        animate();
+    }
+}
+
+function stopAnimation() {
+    isAnimating = false;
+}
+
+// Инициализация анимации
+startAnimation();
 
 // Материалы
 const dpkMaterial = new THREE.MeshPhongMaterial({
@@ -423,31 +534,39 @@ function createStairModel(dimensions) {
     // Продольные балки основания - от переднего края до заднего
     // Корректируем общую глубину с учетом возможной площадки
     const lastStepDepth = (has_platform && platform_depth > 0) ? platform_depth : step_depth;
-    const totalDepth = step_depth * (steps - 1) + lastStepDepth - profile_thickness; // Уменьшаем на 20мм
-    const baseLongBeamGeometry = new THREE.BoxGeometry(profile_thickness, profile_thickness, totalDepth);
+    const totalDepth = step_depth * (steps - 1) + lastStepDepth - profile_thickness2; // Уменьшаем на 20мм
+    const baseLongBeamGeometry = new THREE.BoxGeometry(profile_thickness2, profile_thickness, totalDepth); //боковые + вперед -назад 
     
     // Левая продольная балка основания
     const leftBaseLongBeam = new THREE.Mesh(baseLongBeamGeometry, frameMaterial);
-    leftBaseLongBeam.position.set(-width/2 + profile_thickness/2, 0, totalDepth/2);
+    leftBaseLongBeam.position.set((-width/2 + profile_thickness/2)+10, 0, totalDepth/2);
     stairModel.add(leftBaseLongBeam);
     
     // Правая продольная балка основания
     const rightBaseLongBeam = new THREE.Mesh(baseLongBeamGeometry, frameMaterial);
-    rightBaseLongBeam.position.set(width/2 - profile_thickness/2, 0, totalDepth/2);
+    rightBaseLongBeam.position.set((width/2 - profile_thickness/2)-10, 0, totalDepth/2);
     stairModel.add(rightBaseLongBeam);
     
     // Поперечные балки основания - передняя и задняя
-    const baseBeamGeometry = new THREE.BoxGeometry(width, profile_thickness, profile_thickness);
+    const baseBeamGeometry = new THREE.BoxGeometry(width, profile_thickness, profile_thickness2);
     
     // Передняя поперечина основания
     const frontBaseBeam = new THREE.Mesh(baseBeamGeometry, frameMaterial);
-    frontBaseBeam.position.set(0, 0, 0);
+    frontBaseBeam.position.set(0, 0, 10);
     stairModel.add(frontBaseBeam);
     
     // Задняя поперечина основания (под задними стойками последней ступени)
     const backBaseBeam = new THREE.Mesh(baseBeamGeometry, frameMaterial);
-    backBaseBeam.position.set(0, 0, totalDepth); // Теперь она будет на 20мм ближе к переду
+    backBaseBeam.position.set(0, 0, totalDepth+10); // Теперь она будет на 20мм ближе к переду
     stairModel.add(backBaseBeam);
+	
+    // Средняя продольная балка основания. Появляется от 1500 мм
+	if(width >= 1500){
+		const middleBaseLongBeam = new THREE.Mesh(baseLongBeamGeometry, frameMaterial);
+		middleBaseLongBeam.position.set(0, 0, totalDepth/2);
+		stairModel.add(middleBaseLongBeam);
+	}
+	
 
     // 2. Горизонтальные ступени и их опоры
     for (let i = 0; i < steps; i++) {
@@ -457,61 +576,65 @@ function createStairModel(dimensions) {
         const currentStepDepth = isPlatform ? platform_depth : step_depth;
 
         // Рама ступени (передняя и задняя балки)
-        const stepFrameGeometry = new THREE.BoxGeometry(width, profile_thickness, profile_thickness);
+        const stepFrameGeometry = new THREE.BoxGeometry(width, profile_thickness, profile_thickness2);
         
         // Передняя балка ступени
         const frontStepBeam = new THREE.Mesh(stepFrameGeometry, frameMaterial);
-        frontStepBeam.position.set(0, (i + 1) * step_height, i * step_depth);
+        frontStepBeam.position.set(0, (i + 1) * step_height, i * step_depth+10);
         stairModel.add(frontStepBeam);
         
         // Задняя балка ступени
         const backStepBeam = new THREE.Mesh(stepFrameGeometry, frameMaterial);
-        backStepBeam.position.set(0, (i + 1) * step_height, i * step_depth + currentStepDepth - profile_thickness);
+        backStepBeam.position.set(0, (i + 1) * step_height, i * step_depth + currentStepDepth - profile_thickness-10);
         stairModel.add(backStepBeam);
         
         // Боковые балки ступени
-        const sideSupportGeometry = new THREE.BoxGeometry(profile_thickness, profile_thickness, currentStepDepth - profile_thickness);
+        const sideSupportGeometry = new THREE.BoxGeometry(profile_thickness2, profile_thickness, currentStepDepth - profile_thickness2);
         
         // Левая боковая балка
         const leftSideSupport = new THREE.Mesh(sideSupportGeometry, frameMaterial);
-        leftSideSupport.position.set(-width/2 + profile_thickness/2, (i + 1) * step_height, i * step_depth + (currentStepDepth - profile_thickness)/2);
+        leftSideSupport.position.set(-width/2 + profile_thickness2/2, (i + 1) * step_height, i * step_depth + (currentStepDepth - profile_thickness)/2);
         stairModel.add(leftSideSupport);
         
         // Правая боковая балка
         const rightSideSupport = new THREE.Mesh(sideSupportGeometry, frameMaterial);
-        rightSideSupport.position.set(width/2 - profile_thickness/2, (i + 1) * step_height, i * step_depth + (currentStepDepth - profile_thickness)/2);
+        rightSideSupport.position.set(width/2 - profile_thickness2/2, (i + 1) * step_height, i * step_depth + (currentStepDepth - profile_thickness)/2);
         stairModel.add(rightSideSupport);
 
         // 3. Вертикальные стойки от ступени до основания
-        const leftStandGeometry = new THREE.BoxGeometry(profile_thickness, (i + 1) * step_height, profile_thickness);
-        const rightStandGeometry = new THREE.BoxGeometry(profile_thickness, (i + 1) * step_height, profile_thickness);
+        const leftStandGeometry = new THREE.BoxGeometry(profile_thickness2, (i + 1) * step_height, profile_thickness);
+        const rightStandGeometry = new THREE.BoxGeometry(profile_thickness2, (i + 1) * step_height, profile_thickness);
         
         // Передние стойки (для всех ступеней)
         const frontLeftStand = new THREE.Mesh(leftStandGeometry, frameMaterial);
-        frontLeftStand.position.set(-width/2 + profile_thickness/2, ((i + 1) * step_height)/2, i * step_depth);
+        frontLeftStand.position.set(-width/2 + profile_thickness2/2, ((i + 1) * step_height)/2, i * step_depth);
         stairModel.add(frontLeftStand);
         
         const frontRightStand = new THREE.Mesh(rightStandGeometry, frameMaterial);
-        frontRightStand.position.set(width/2 - profile_thickness/2, ((i + 1) * step_height)/2, i * step_depth);
+        frontRightStand.position.set(width/2 - profile_thickness2/2, ((i + 1) * step_height)/2, i * step_depth);
         stairModel.add(frontRightStand);
         
         // Задние стойки (только для последней ступени)
         if (isLastStep) {
             const backLeftStand = new THREE.Mesh(leftStandGeometry, frameMaterial);
-            backLeftStand.position.set(-width/2 + profile_thickness/2, ((i + 1) * step_height)/2, i * step_depth + currentStepDepth - profile_thickness);
+            backLeftStand.position.set((-width/2 + profile_thickness/2)+10, ((i + 1) * step_height)/2, i * step_depth + currentStepDepth - profile_thickness);
             stairModel.add(backLeftStand);
             
             const backRightStand = new THREE.Mesh(rightStandGeometry, frameMaterial);
-            backRightStand.position.set(width/2 - profile_thickness/2, ((i + 1) * step_height)/2, i * step_depth + currentStepDepth - profile_thickness);
+            backRightStand.position.set((width/2 - profile_thickness/2)-10, ((i + 1) * step_height)/2, i * step_depth + currentStepDepth - profile_thickness);
             stairModel.add(backRightStand);
         }
     }
 
     // Функция для расчета количества усилений в зависимости от ширины
     function calculateReinforcementsCount(width) {
-        if (width <= 1000) return 1;
-        return Math.ceil((width - 1000) / 300) + 1;
+        //if (width <= 1000) return 1;
+		
+		if(width > 1000) return Math.ceil((width - 80) / 300) - 1;
+
     }
+	
+
 
     // Добавляем усиления
     const reinforcementsCount = reinforcements_count || calculateReinforcementsCount(width);
@@ -519,7 +642,7 @@ function createStairModel(dimensions) {
     
     // Усиления для каждой ступени
     for (let i = 0; i < steps; i++) {
-        const startY = i * step_height;
+        const startY = i * step_height - profile_thickness / 2;
         const isLastStep = i === steps - 1;
         const currentStepDepth = isLastStep && has_platform ? platform_depth : step_depth;
         const currentStepZ = i * step_depth; // Позиция начала текущей ступени всегда основана на step_depth
@@ -529,23 +652,49 @@ function createStairModel(dimensions) {
             
             if (i === 0) {
                 // Для первой ступени - вертикальное усиление до основания
-                const frontStandGeometry = new THREE.BoxGeometry(profile_thickness, step_height, profile_thickness);
+                const frontStandGeometry = new THREE.BoxGeometry(profile_thickness2, step_height, profile_thickness);
                 const frontStand = new THREE.Mesh(frontStandGeometry, frameMaterial);
                 frontStand.position.set(xPos, step_height/2, 0);
                 stairModel.add(frontStand);
             } else {
-                // Для остальных ступеней - вертикальное усиление между ступенями
-                const standGeometry = new THREE.BoxGeometry(profile_thickness, step_height, profile_thickness);
-                const stand = new THREE.Mesh(standGeometry, frameMaterial);
-                // Позиционируем у задней части предыдущей ступени
-                const previousStepZ = (i - 1) * step_depth;
-                stand.position.set(xPos, startY + step_height/2, previousStepZ + step_depth);
-                stairModel.add(stand);
+				if(width >= 1500){
+					// Для остальных ступеней - вертикальное усиление между ступенями
+					if(j == 1 && i == 4){// если у нас вторая палка
+					const standGeometry = new THREE.BoxGeometry(profile_thickness2, (i + 1) * step_height, profile_thickness);
+					const stand = new THREE.Mesh(standGeometry, frameMaterial);
+					
+					// Позиционируем у задней части предыдущей ступени
+					const previousStepZ = (i - 1) * step_depth;
+					
+					stand.position.set(xPos, ((i + 1) * step_height)/2, previousStepZ + step_depth);
+					stairModel.add(stand);
+					} else { // все остальные палки
+						const standGeometry = new THREE.BoxGeometry(profile_thickness2, step_height, profile_thickness);
+						const stand = new THREE.Mesh(standGeometry, frameMaterial);
+						
+						// Позиционируем у задней части предыдущей ступени
+						const previousStepZ = (i - 1) * step_depth;
+						
+						 stand.position.set(xPos, startY + step_height/2, previousStepZ + step_depth);
+						stairModel.add(stand);
+					}
+				}
+				else{
+					// Для остальных ступеней - вертикальное усиление между ступенями
+					const standGeometry = new THREE.BoxGeometry(profile_thickness2, step_height, profile_thickness);
+					const stand = new THREE.Mesh(standGeometry, frameMaterial);
+					
+					// Позиционируем у задней части предыдущей ступени
+					const previousStepZ = (i - 1) * step_depth;
+					
+					 stand.position.set(xPos, startY + step_height/2, previousStepZ + step_depth);
+					stairModel.add(stand);
+				}
             }
 
             // Добавляем горизонтальные усиления для ступеней
             if (needsHorizontalReinforcement(i, material)) {
-                const horizontalReinforcementGeometry = new THREE.BoxGeometry(profile_thickness, profile_thickness, currentStepDepth - profile_thickness);
+                const horizontalReinforcementGeometry = new THREE.BoxGeometry(profile_thickness2, profile_thickness, currentStepDepth - profile_thickness);
                 const horizontalReinforcement = new THREE.Mesh(horizontalReinforcementGeometry, frameMaterial);
                 horizontalReinforcement.position.set(
                     xPos,
@@ -565,7 +714,7 @@ function createStairModel(dimensions) {
             const xPos = -width/2 + profile_thickness + spacing * (j + 1);
             const standHeight = steps * step_height;
             
-            const backStandGeometry = new THREE.BoxGeometry(profile_thickness, standHeight, profile_thickness);
+            const backStandGeometry = new THREE.BoxGeometry(profile_thickness2, standHeight, profile_thickness);
             const backStand = new THREE.Mesh(backStandGeometry, frameMaterial);
             // Позиционируем у задней части последней ступени/площадки
             backStand.position.set(xPos, standHeight/2, lastStepZ + lastStepDepth - profile_thickness);
@@ -732,6 +881,21 @@ document.getElementById('calculator-form').addEventListener('submit', async func
     if (!validateForm()) {
         return;
     }
+//Если шинира меньше или равна 1000, то будет 1 перемычка в ступени. 
+//Иначе производим просчёт кол-ва перемычек в зависимости от ширины
+var peremI;
+const widthProscet = parseFloat(document.getElementById('width').value);
+
+if(widthProscet<=1000){
+	var peremI=1;
+}
+if(widthProscet > 1000 && widthProscet <= 1200 ){
+	var peremI = 2; 
+} 
+
+if(widthProscet > 1200){
+	var peremI = Math.ceil((widthProscet - 80) / 400) - 1; 
+} 
 
     const formData = {
         width: parseFloat(document.getElementById('width').value),
@@ -740,7 +904,7 @@ document.getElementById('calculator-form').addEventListener('submit', async func
         material: document.getElementById('material').value,
         has_platform: document.getElementById('has-platform').checked,
         platform_depth: document.getElementById('has-platform').checked ? parseFloat(document.getElementById('platform-depth').value) : 0,
-        reinforcements_count: document.getElementById('custom-reinforcements').checked ? parseInt(document.getElementById('reinforcements-count').value) : 1,
+        reinforcements_count: document.getElementById('custom-reinforcements').checked ? parseInt(document.getElementById('reinforcements-count').value) : peremI,
         paint_consumption: parseFloat(document.getElementById('paint-consumption').value),
         frame_color: document.getElementById('frame-color').value
     };
